@@ -6,13 +6,12 @@ import org.jmock.api.Expectation;
 import org.jmock.api.ExpectationError;
 import org.jmock.api.Invocation;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 public class InvocationDispatcher implements ExpectationCollector, SelfDescribing {
 	private List<Expectation> expectations = new ArrayList<Expectation>();
 	private List<StateMachine> stateMachines = new ArrayList<StateMachine>();
+	private Map<String, Double> responseTimes = new HashMap<String, Double>();
     
     public StateMachine newStateMachine(String name) {
         StateMachine stateMachine = new StateMachine(name);
@@ -65,6 +64,19 @@ public class InvocationDispatcher implements ExpectationCollector, SelfDescribin
         }
     }
     
+    public void calculateResponseTimes() {
+        for (Expectation expectation : expectations) {
+            Double d = ((InvocationExpectation)expectation).getResponseTime();
+            String k = expectation.toString();
+            Double v = responseTimes.get(k);
+            if (v != null) {
+                responseTimes.put(k, v + d);
+            } else {
+                responseTimes.put(k, d);
+            }
+        }
+    }
+
 
     public boolean isSatisfied() {
 		for (Expectation expectation : expectations) {
@@ -84,5 +96,15 @@ public class InvocationDispatcher implements ExpectationCollector, SelfDescribin
         
         throw ExpectationError.unexpected("unexpected invocation", invocation);
 	}
+
+	public void reset() {
+        expectations.clear();
+    }
+
+    public void overallResponseTimes(int repeats) {
+        for (Map.Entry<String, Double> e : responseTimes.entrySet()) {
+            System.out.println(e.getKey() + ": " + e.getValue() / repeats);
+        }
+    }
 
 }

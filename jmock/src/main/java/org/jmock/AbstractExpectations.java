@@ -4,8 +4,13 @@ import org.hamcrest.CoreMatchers;
 import org.hamcrest.Matcher;
 import org.hamcrest.core.*;
 import org.jmock.api.Action;
+import org.jmock.api.Distribution;
 import org.jmock.internal.*;
 import org.jmock.lib.action.*;
+import org.jmock.lib.distribution.ExponentialDistribution;
+import org.jmock.lib.distribution.ParetoDistribution;
+import org.jmock.lib.distribution.PoissonDistribution;
+import org.jmock.lib.distribution.UniformDistribution;
 import org.jmock.syntax.*;
 
 import java.util.ArrayList;
@@ -232,6 +237,10 @@ public abstract class AbstractExpectations implements ExpectationBuilder,
         currentBuilder().setAction(action);
     }
     
+    public void responseTime(Distribution dist) {
+        currentBuilder().setDistribution(dist);
+    }
+
     /* Common constraints
      */
     
@@ -316,6 +325,30 @@ public abstract class AbstractExpectations implements ExpectationBuilder,
         return new ActionSequence(actions);
     }
     
+    public static Distribution exponential(double lambda) {
+        return new ExponentialDistribution(lambda);
+    }
+
+    public static Distribution pareto() {
+        return new ParetoDistribution();
+    }
+
+    public static Distribution pareto(double k, double alpha) {
+        return new ParetoDistribution(k, alpha);
+    }
+
+    public static Distribution poisson(double lambda) {
+        return new PoissonDistribution(lambda);
+    }
+
+    public static Distribution uniform() {
+        return new UniformDistribution();
+    }
+
+    public static Distribution uniform(double lower, double upper) {
+        return new UniformDistribution(lower, upper);
+    }
+
     /* Naming and ordering
      */
     

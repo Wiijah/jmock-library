@@ -7,9 +7,7 @@ import java.util.List;
 
 import org.hamcrest.Matcher;
 import org.jmock.Sequence;
-import org.jmock.api.Action;
-import org.jmock.api.Expectation;
-import org.jmock.api.Invocation;
+import org.jmock.api.*;
 import org.jmock.internal.matcher.MethodNameMatcher;
 import org.jmock.internal.matcher.MockObjectMatcher;
 import org.jmock.internal.matcher.AllParametersMatcher;
@@ -56,6 +54,10 @@ public class InvocationExpectationBuilder
         needsDefaultAction = false;
     }
     
+    public void setDistribution(Distribution dist) {
+        expectation.setDistribution(dist);
+    }
+
     public void addSideEffect(SideEffect sideEffect) {
         expectation.addSideEffect(sideEffect);
     }

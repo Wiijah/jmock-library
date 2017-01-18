@@ -214,6 +214,16 @@ public class Mockery implements SelfDescribing {
         }
 	}
     
+    public void doExtraThings() {
+        dispatcher.calculateResponseTimes();
+        dispatcher.reset();
+        mockNames.clear();
+    }
+
+    public void overallResponseTimes(int repeats) {
+        dispatcher.overallResponseTimes(repeats);
+    }
+
     public void describeTo(Description description) {
         description.appendDescriptionOf(dispatcher);
         describeHistory(description);
