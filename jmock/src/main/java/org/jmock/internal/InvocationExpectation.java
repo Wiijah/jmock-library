@@ -200,7 +200,7 @@ public class InvocationExpectation implements Expectation {
     }
 
     public double getResponseTime() {
-        return responseTime / invocationCount;
+        return responseTime;
     }
 
     private static class AnyParametersMatcher extends IsAnything<Object[]> implements ParametersMatcher {

@@ -43,7 +43,7 @@ public class PerformanceTestRunner extends BlockJUnit4ClassRunner {
     }
 
     protected Statement withRepeat(FrameworkMethod method, Object target, Statement statement) {
-        return new SerialRepeat(method, target, statement);
+        return new ParallelRepeat(method, target, statement);
     }
 
     /* Not sure why but these are private in BlockJUnit4ClassRunner.

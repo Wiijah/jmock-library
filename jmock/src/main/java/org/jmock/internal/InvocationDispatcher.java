@@ -107,4 +107,7 @@ public class InvocationDispatcher implements ExpectationCollector, SelfDescribin
         }
     }
 
+    protected Map<String, Double> getResponseTimes() {
+        return responseTimes;
+    }
 }

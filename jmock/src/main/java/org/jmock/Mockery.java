@@ -35,7 +35,7 @@ public class Mockery implements SelfDescribing {
     private final Set<String> mockNames = new HashSet<String>();
     private final ReturnDefaultValueAction defaultAction = new ReturnDefaultValueAction(imposteriser);
     private final List<Invocation> actualInvocations = new ArrayList<Invocation>();
-    private final InvocationDispatcher dispatcher = new InvocationDispatcher();
+    private InvocationDispatcher dispatcher = new InvocationDispatcher();
 
     private Error firstError = null;
 
@@ -110,6 +110,10 @@ public class Mockery implements SelfDescribing {
         this.threadingPolicy = threadingPolicy;
     }
     
+    public void setInvocationDispatcher(InvocationDispatcher dispatcher) {
+        this.dispatcher = dispatcher;
+    }
+
     /*
      * API
      */
