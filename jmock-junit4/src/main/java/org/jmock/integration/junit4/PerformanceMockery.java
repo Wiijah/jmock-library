@@ -3,8 +3,6 @@ package org.jmock.integration.junit4;
 import org.jmock.Mockery;
 import org.jmock.auto.internal.Mockomatic;
 import org.jmock.internal.AllDeclaredFields;
-import org.jmock.internal.ParallelInvocationDispatcher;
-import org.jmock.lib.CamelCaseNamingScheme;
 import org.jmock.lib.concurrent.Synchroniser;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
@@ -21,12 +19,6 @@ public class PerformanceMockery extends Mockery implements MethodRule {
     private final Mockomatic mockomatic = new Mockomatic(this);
     public final Object lock = new Object();
     public int test = 0;
-
-    public PerformanceMockery() {
-        setThreadingPolicy(new Synchroniser());
-        setNamingScheme(new UniqueNamingScheme());
-        setInvocationDispatcher(new ParallelInvocationDispatcher());
-    }
 
     public Statement apply(final Statement base, final FrameworkMethod method, final Object target) {
         return new Statement() {

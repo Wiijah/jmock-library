@@ -1,6 +1,8 @@
 package org.jmock.integration.junit4;
 
 import org.jmock.internal.AllDeclaredFields;
+import org.jmock.internal.ParallelInvocationDispatcher;
+import org.jmock.lib.concurrent.Synchroniser;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 
@@ -26,6 +28,10 @@ public class ParallelRepeat extends Statement {
                 e.printStackTrace();
             }
         }
+
+        mockery.setThreadingPolicy(new Synchroniser());
+        mockery.setNamingScheme(new UniqueNamingScheme());
+        mockery.setInvocationDispatcher(new ParallelInvocationDispatcher());
     }
 
     @Override
