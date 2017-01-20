@@ -11,7 +11,7 @@ import java.util.*;
 public class InvocationDispatcher implements ExpectationCollector, SelfDescribing {
 	private List<Expectation> expectations = new ArrayList<Expectation>();
 	private List<StateMachine> stateMachines = new ArrayList<StateMachine>();
-	private Map<String, Double> responseTimes = new HashMap<String, Double>();
+	private Double totalResponseTime = null;
     
     public StateMachine newStateMachine(String name) {
         StateMachine stateMachine = new StateMachine(name);
@@ -63,18 +63,22 @@ public class InvocationDispatcher implements ExpectationCollector, SelfDescribin
             }
         }
     }
-    
-    public void calculateResponseTimes() {
-        for (Expectation expectation : expectations) {
-            Double d = ((InvocationExpectation)expectation).getResponseTime();
-            String k = expectation.toString();
-            Double v = responseTimes.get(k);
-            if (v != null) {
-                responseTimes.put(k, v + d);
-            } else {
-                responseTimes.put(k, d);
+
+    public void calculateTotalResponseTime() {
+        if (totalResponseTime == null) {
+            totalResponseTime = 0.0;
+            for (Expectation expectation : expectations) {
+                totalResponseTime += ((InvocationExpectation)expectation).getResponseTime();
             }
         }
+    }
+
+    public double getTotalResponseTime() {
+        return totalResponseTime;
+    }
+
+    public void overallResponseTimes(int repeats) {
+        System.out.println(totalResponseTime);
     }
 
 
@@ -101,13 +105,4 @@ public class InvocationDispatcher implements ExpectationCollector, SelfDescribin
         expectations.clear();
     }
 
-    public void overallResponseTimes(int repeats) {
-        for (Map.Entry<String, Double> e : responseTimes.entrySet()) {
-            System.out.println(e.getKey() + ": " + e.getValue() / repeats);
-        }
-    }
-
-    protected Map<String, Double> getResponseTimes() {
-        return responseTimes;
-    }
 }

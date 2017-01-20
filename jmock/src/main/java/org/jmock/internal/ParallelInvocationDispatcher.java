@@ -16,7 +16,7 @@ public class ParallelInvocationDispatcher extends InvocationDispatcher {
         }
     };
 
-    private final Map<String, Double> responseTimes = Collections.synchronizedMap(new HashMap<String, Double>());
+    private final Map<Long, Double> responseTimes = Collections.synchronizedMap(new HashMap<Long, Double>());
 
     private InvocationDispatcher myInvocationDispatcher() {
         return dispatchers.get();
@@ -43,22 +43,22 @@ public class ParallelInvocationDispatcher extends InvocationDispatcher {
     }
 
     @Override
-    public void calculateResponseTimes() {
-        myInvocationDispatcher().calculateResponseTimes();
-        // FIXME - Is this synchronized block necessary?
-        // Answer: probably not lel
-        synchronized (responseTimes) {
-            Map<String, Double> foo = myInvocationDispatcher().getResponseTimes();
-            for (Map.Entry<String, Double> e : foo.entrySet()) {
-                String k = e.getKey().replaceAll("-\\d\\d", "");
-                Double v = e.getValue();
-                Double d = responseTimes.get(k);
-                if (d != null) {
-                    responseTimes.put(k, d + v);
-                } else {
-                    responseTimes.put(k, v);
-                }
-            }
+    public void calculateTotalResponseTime() {
+        myInvocationDispatcher().calculateTotalResponseTime();
+        Long k = Thread.currentThread().getId();
+        Double v = getTotalResponseTime();
+        responseTimes.put(k, v);
+    }
+
+    @Override
+    public double getTotalResponseTime() {
+        return myInvocationDispatcher().getTotalResponseTime();
+    }
+
+    @Override
+    public void overallResponseTimes(int repeats) {
+        for (Map.Entry<Long, Double> e : responseTimes.entrySet()) {
+            System.out.println("Thread: " + e.getKey() + " Total response time: " + e.getValue());
         }
     }
 
@@ -75,12 +75,5 @@ public class ParallelInvocationDispatcher extends InvocationDispatcher {
     @Override
     public void reset() {
         myInvocationDispatcher().reset();
-    }
-
-    @Override
-    public void overallResponseTimes(int repeats) {
-        for (Map.Entry<String, Double> e : responseTimes.entrySet()) {
-            System.out.println(e.getKey() + ": " + e.getValue() / repeats);
-        }
     }
 }

@@ -219,7 +219,7 @@ public class Mockery implements SelfDescribing {
 	}
     
     public void doExtraThings() {
-        dispatcher.calculateResponseTimes();
+        dispatcher.calculateTotalResponseTime();
         dispatcher.reset();
         mockNames.clear();
     }
