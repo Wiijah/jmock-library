@@ -1,10 +1,9 @@
 package ic.doc;
 
 import org.jmock.Expectations;
-import org.jmock.integration.junit4.JUnitRuleMockery;
 import org.jmock.integration.junit4.PerformanceMockery;
 import org.jmock.integration.junit4.PerformanceTestRunner;
-import org.jmock.integration.junit4.Repeat;
+import org.jmock.integration.junit4.Concurrency;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -16,14 +15,10 @@ public class GettingStartedJUnit4Rule {
   //public JUnitRuleMockery context = new JUnitRuleMockery();
 
   @Test
-  @Repeat(value=50)
+  @Concurrency(threads=50)
   public void oneSubscriberReceivesAMessage() {
     // set up
     final Subscriber subscriber1 = context.perfMock(Subscriber.class);
-    //final Subscriber subscriber2 = context.mock(Subscriber.class, "subscriber2");
-
-    // 11-01-2017
-    //final Subscriber subscriber1 = context.perfMock(Subscriber.class, queueingModel);
 
     Publisher publisher = new Publisher();
     publisher.add(subscriber1);
@@ -47,7 +42,6 @@ public class GettingStartedJUnit4Rule {
     publisher.publish(message2);
     publisher.publish(message2);
     publisher.publish(message2);
-    
   }
 
   @Test

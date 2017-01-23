@@ -23,7 +23,7 @@ public class ParallelRepeat extends Statement {
     public ParallelRepeat(FrameworkMethod method, Object target, Statement next) {
         this.method = method.getMethod();
         this.next = next;
-        this.repeat = getRepeats(method.getAnnotation(Repeat.class));
+        this.repeat = getRepeats(method.getAnnotation(Concurrency.class));
 
         Field contextField = getContext(target);
         if (contextField != null) {
@@ -75,11 +75,11 @@ public class ParallelRepeat extends Statement {
         mockery.performanceMockeryCleanup();
     }
 
-    private int getRepeats(Repeat annotation) {
+    private int getRepeats(Concurrency annotation) {
         if (annotation == null) {
             return 1;
         }
-        return annotation.value();
+        return annotation.threads();
     }
 
     private Field getContext(Object target) {

@@ -14,7 +14,7 @@ public class SerialRepeat extends Statement {
 
     public SerialRepeat(FrameworkMethod method, Object target, Statement next) {
         this.next = next;
-        this.repeat = getRepeats(method.getAnnotation(Repeat.class));
+        this.repeat = getRepeats(method.getAnnotation(Concurrency.class));
 
         Field contextField = getContext(target);
         if (contextField != null) {
@@ -35,11 +35,11 @@ public class SerialRepeat extends Statement {
         mockery.overallResponseTimes(repeat);
     }
 
-    private int getRepeats(Repeat annotation) {
+    private int getRepeats(Concurrency annotation) {
         if (annotation == null) {
             return 1;
         }
-        return annotation.value();
+        return annotation.threads();
     }
 
     private Field getContext(Object target) {
