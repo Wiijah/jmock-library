@@ -1,10 +1,7 @@
 package ic.doc;
 
 import org.jmock.Expectations;
-import org.jmock.integration.junit4.PerformanceMockery;
-import org.jmock.integration.junit4.PerformanceTestRunner;
-import org.jmock.integration.junit4.Concurrency;
-import org.jmock.integration.junit4.Repeat;
+import org.jmock.integration.junit4.*;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -18,6 +15,7 @@ public class GettingStartedJUnit4Rule {
   @Test
   @Repeat(value=2)
   @Concurrency(threads=5)
+  @PerfExpectation(expectation=APerfExpectationClass.class)
   public void oneSubscriberReceivesAMessage() {
     // set up
     final Subscriber subscriber1 = context.perfMock(Subscriber.class);

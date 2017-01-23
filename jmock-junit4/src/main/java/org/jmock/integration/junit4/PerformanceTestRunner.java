@@ -13,6 +13,7 @@ import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.Statement;
 
+import java.lang.reflect.Field;
 import java.util.List;
 
 public class PerformanceTestRunner extends BlockJUnit4ClassRunner {
@@ -66,6 +67,20 @@ public class PerformanceTestRunner extends BlockJUnit4ClassRunner {
             }.run();
         } catch (Throwable e) {
             return new Fail(e);
+        }
+
+        PerfExpectation annotation = method.getAnnotation(PerfExpectation.class);
+        if (annotation != null) {
+            try {
+                System.out.println("Making a new instance of PerfExpectation!");
+                annotation.expectation().newInstance();
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            } catch (InstantiationException e) {
+                e.printStackTrace();
+            }
+        } else {
+            System.out.println("There is no @PerfExpectation");
         }
 
         Statement statement = methodInvoker(method, test);
