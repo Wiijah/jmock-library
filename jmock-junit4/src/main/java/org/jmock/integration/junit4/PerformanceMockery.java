@@ -3,13 +3,14 @@ package org.jmock.integration.junit4;
 import org.jmock.Mockery;
 import org.jmock.auto.internal.Mockomatic;
 import org.jmock.internal.AllDeclaredFields;
-import org.jmock.lib.concurrent.Synchroniser;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 
 import static org.junit.Assert.fail;
 
@@ -17,8 +18,24 @@ public class PerformanceMockery extends Mockery implements MethodRule {
     public static final PerformanceMockery INSTANCE = new PerformanceMockery();
 
     private final Mockomatic mockomatic = new Mockomatic(this);
+    private List<Thread> threads = new ArrayList<Thread>();
     public final Object lock = new Object();
     public int test = 0;
+
+    public void addThread(Thread thread) {
+        threads.add(thread);
+    }
+
+    public void start(CountDownLatch startSignal) {
+        for (Thread t : threads) {
+            t.start();
+        }
+        startSignal.countDown();
+    }
+
+    public void performanceMockeryCleanup() {
+        threads.clear();
+    }
 
     public Statement apply(final Statement base, final FrameworkMethod method, final Object target) {
         return new Statement() {

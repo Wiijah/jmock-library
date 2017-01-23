@@ -8,6 +8,7 @@ import org.junit.runners.model.Statement;
 
 import java.lang.reflect.Field;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Semaphore;
 
 public class ParallelRepeat extends Statement {
@@ -15,6 +16,7 @@ public class ParallelRepeat extends Statement {
     private final int repeat;
     private final Semaphore main = new Semaphore(1);
     private PerformanceMockery mockery = null;
+    private final CountDownLatch startSignal = new CountDownLatch(1);
 
     public ParallelRepeat(FrameworkMethod method, Object target, Statement next) {
         this.next = next;
@@ -42,6 +44,7 @@ public class ParallelRepeat extends Statement {
             @Override
             public void run() {
                 try {
+                    startSignal.await();
                     next.evaluate();
                 } catch (Throwable e) {
                     e.printStackTrace();
@@ -51,8 +54,9 @@ public class ParallelRepeat extends Statement {
 
         for (int i = 0; i < repeat; i++) {
             Thread t = new Thread(r);
-            t.start();
+            mockery.addThread(t);
         }
+        mockery.start(startSignal);
 
         synchronized (mockery.lock) {
             while (mockery.test < repeat) {
@@ -65,6 +69,7 @@ public class ParallelRepeat extends Statement {
         mockery.test = 0;
         mockery.overallResponseTimes(repeat);
         System.out.println("----------");
+        mockery.performanceMockeryCleanup();
     }
 
     private int getRepeats(Repeat annotation) {

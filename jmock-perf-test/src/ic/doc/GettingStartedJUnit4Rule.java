@@ -16,40 +16,44 @@ public class GettingStartedJUnit4Rule {
   //public JUnitRuleMockery context = new JUnitRuleMockery();
 
   @Test
-  @Repeat(value=3)
+  @Repeat(value=50)
   public void oneSubscriberReceivesAMessage() {
     // set up
-    final Subscriber subscriber = context.mock(Subscriber.class);
+    final Subscriber subscriber1 = context.perfMock(Subscriber.class);
+    //final Subscriber subscriber2 = context.mock(Subscriber.class, "subscriber2");
 
     // 11-01-2017
-    //final Subscriber subscriber = context.perfMock(Subscriber.class, queueingModel);
+    //final Subscriber subscriber1 = context.perfMock(Subscriber.class, queueingModel);
 
     Publisher publisher = new Publisher();
-    publisher.add(subscriber);
+    publisher.add(subscriber1);
 
     final String message = "message";
     final String message2 = "message2";
 
     // expectations
     context.checking(new Expectations() {{
-      oneOf(subscriber).receive(message);
+      oneOf(subscriber1).receive(message);
       responseTime(uniform(10, 100));
-      atLeast(3).of(subscriber).receive(message2);
+      
+      exactly(4).of(subscriber1).receive(message2);
       responseTime(uniform(1000, 10000));
     }});
 
     // execute
     publisher.publish(message);
+    
     publisher.publish(message2);
     publisher.publish(message2);
     publisher.publish(message2);
     publisher.publish(message2);
+    
   }
 
   @Test
   public void testMethod2() {
     // set up
-    final Subscriber subscriber = context.mock(Subscriber.class);
+    final Subscriber subscriber = context.perfMock(Subscriber.class);
 
     Publisher publisher = new Publisher();
     publisher.add(subscriber);
