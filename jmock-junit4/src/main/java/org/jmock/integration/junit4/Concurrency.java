@@ -7,6 +7,6 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
-public @interface Repeat {
-    int value() default 1;
+public @interface Concurrency {
+    int threads() default 1;
 }

@@ -63,12 +63,9 @@ public class ParallelRepeat extends Statement {
 
         synchronized (mockery.lock) {
             while (mockery.test < repeat) {
-                System.out.println("test < " + repeat + ", main calling wait()");
                 mockery.lock.wait();
-                System.out.println("after wait(), test = " + mockery.test);
             }
         }
-        System.out.println("main waking");
         mockery.test = 0;
         mockery.overallResponseTimes(repeat);
         System.out.println("----------");

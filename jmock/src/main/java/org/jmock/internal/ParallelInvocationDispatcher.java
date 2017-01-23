@@ -58,7 +58,7 @@ public class ParallelInvocationDispatcher extends InvocationDispatcher {
     @Override
     public void overallResponseTimes(int repeats) {
         for (Map.Entry<Long, Double> e : responseTimes.entrySet()) {
-            System.out.println("Thread: " + e.getKey() + " Total response time: " + e.getValue());
+            System.out.println("Thread: " + e.getKey() + ", Total response time: " + e.getValue());
         }
     }
 

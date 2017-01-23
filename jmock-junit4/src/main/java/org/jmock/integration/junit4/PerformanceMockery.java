@@ -62,7 +62,6 @@ public class PerformanceMockery extends Mockery implements MethodRule {
                 synchronized (lock) {
                     test++;
                     lock.notifyAll();
-                    System.out.println("Thread evaluate() end");
                 }
             }
 
