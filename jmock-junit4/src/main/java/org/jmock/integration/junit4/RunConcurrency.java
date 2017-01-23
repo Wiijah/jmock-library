@@ -23,7 +23,7 @@ public class RunConcurrency extends Statement {
     public RunConcurrency(FrameworkMethod method, Object target, Statement next) {
         this.method = method.getMethod();
         this.next = next;
-        this.repeat = getRepeats(method.getAnnotation(Concurrency.class));
+        this.repeat = getConcurrentThreads(method.getAnnotation(Concurrency.class));
 
         Field contextField = getContext(target);
         if (contextField != null) {
@@ -72,7 +72,7 @@ public class RunConcurrency extends Statement {
         mockery.performanceMockeryCleanup();
     }
 
-    private int getRepeats(Concurrency annotation) {
+    private int getConcurrentThreads(Concurrency annotation) {
         if (annotation == null) {
             return 1;
         }
