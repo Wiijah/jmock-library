@@ -7,11 +7,13 @@ import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Semaphore;
 
 public class ParallelRepeat extends Statement {
+    private final Method method;
     private final Statement next;
     private final int repeat;
     private final Semaphore main = new Semaphore(1);
@@ -19,6 +21,7 @@ public class ParallelRepeat extends Statement {
     private final CountDownLatch startSignal = new CountDownLatch(1);
 
     public ParallelRepeat(FrameworkMethod method, Object target, Statement next) {
+        this.method = method.getMethod();
         this.next = next;
         this.repeat = getRepeats(method.getAnnotation(Repeat.class));
 

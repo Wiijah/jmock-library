@@ -22,6 +22,8 @@ public class PerformanceMockery extends Mockery implements MethodRule {
     public final Object lock = new Object();
     public int test = 0;
 
+    private Object currentMockObject;
+
     public void addThread(Thread thread) {
         threads.add(thread);
     }
@@ -33,8 +35,20 @@ public class PerformanceMockery extends Mockery implements MethodRule {
         startSignal.countDown();
     }
 
+    @SuppressWarnings("unchecked")
+    public synchronized <T> T perfMock(Class<T> typeToMock) {
+        if (currentMockObject != null) {
+            return (T) currentMockObject;
+        } else {
+            T tempMockObject = mock(typeToMock);
+            currentMockObject = tempMockObject;
+            return tempMockObject;
+        }
+    }
+
     public void performanceMockeryCleanup() {
         threads.clear();
+        currentMockObject = null;
     }
 
     public Statement apply(final Statement base, final FrameworkMethod method, final Object target) {
