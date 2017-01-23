@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Semaphore;
 
-public class ParallelRepeat extends Statement {
+public class RunConcurrency extends Statement {
     private final Method method;
     private final Statement next;
     private final int repeat;
@@ -20,7 +20,7 @@ public class ParallelRepeat extends Statement {
     private PerformanceMockery mockery = null;
     private final CountDownLatch startSignal = new CountDownLatch(1);
 
-    public ParallelRepeat(FrameworkMethod method, Object target, Statement next) {
+    public RunConcurrency(FrameworkMethod method, Object target, Statement next) {
         this.method = method.getMethod();
         this.next = next;
         this.repeat = getRepeats(method.getAnnotation(Concurrency.class));
