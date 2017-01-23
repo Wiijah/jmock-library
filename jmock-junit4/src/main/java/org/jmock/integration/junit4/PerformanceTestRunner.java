@@ -1,9 +1,13 @@
 package org.jmock.integration.junit4;
 
+import org.junit.internal.AssumptionViolatedException;
+import org.junit.internal.runners.model.EachTestNotifier;
 import org.junit.internal.runners.model.ReflectiveCallable;
 import org.junit.internal.runners.statements.Fail;
 import org.junit.rules.RunRules;
 import org.junit.rules.TestRule;
+import org.junit.runner.Description;
+import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.InitializationError;
@@ -16,6 +20,38 @@ public class PerformanceTestRunner extends BlockJUnit4ClassRunner {
 
     public PerformanceTestRunner(Class<?> testClass) throws InitializationError {
         super(testClass);
+    }
+
+    private int getRepeats(Repeat annotation) {
+        if (annotation == null) {
+            return 1;
+        }
+        return annotation.value();
+    }
+
+    @Override
+    protected void runChild(final FrameworkMethod method, RunNotifier notifier) {
+        Description description = describeChild(method);
+        int repeats = getRepeats(method.getAnnotation(Repeat.class));
+        if (isIgnored(method)) {
+            notifier.fireTestIgnored(description);
+        } else {
+            Statement statement = methodBlock(method);
+            EachTestNotifier eachNotifier = new EachTestNotifier(notifier, description);
+            eachNotifier.fireTestStarted();
+            for (int i = 0; i < repeats; ++i) {
+                try {
+                    statement.evaluate();
+                } catch (AssumptionViolatedException e) {
+                    // TODO - Need to change this!
+                    eachNotifier.addFailedAssumption(e);
+                } catch (Throwable e) {
+                    // TODO - Need to change this!
+                    eachNotifier.addFailure(e);
+                }
+            }
+            eachNotifier.fireTestFinished();
+        }
     }
 
     @Override

@@ -49,6 +49,7 @@ public class PerformanceMockery extends Mockery implements MethodRule {
     public void performanceMockeryCleanup() {
         threads.clear();
         currentMockObject = null;
+        somethingElse();
     }
 
     public Statement apply(final Statement base, final FrameworkMethod method, final Object target) {

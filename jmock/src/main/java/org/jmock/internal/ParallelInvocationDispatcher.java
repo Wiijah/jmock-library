@@ -61,6 +61,10 @@ public class ParallelInvocationDispatcher extends InvocationDispatcher {
             System.out.println("Thread: " + e.getKey() + ", Total response time: " + e.getValue());
         }
     }
+    
+    public void resetResponseTimes() {
+        responseTimes.clear();
+    }
 
     @Override
     public boolean isSatisfied() {

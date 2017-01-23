@@ -1,5 +1,6 @@
 package org.jmock;
 
+import org.apache.tools.ant.taskdefs.Parallel;
 import org.hamcrest.Description;
 import org.hamcrest.SelfDescribing;
 import org.jmock.api.*;
@@ -218,7 +219,7 @@ public class Mockery implements SelfDescribing {
         }
 	}
     
-    public void doExtraThings() {
+    protected void doExtraThings() {
         dispatcher.calculateTotalResponseTime();
         dispatcher.reset();
         mockNames.clear();
@@ -226,6 +227,10 @@ public class Mockery implements SelfDescribing {
 
     public void overallResponseTimes(int repeats) {
         dispatcher.overallResponseTimes(repeats);
+    }
+    
+    protected void somethingElse() {
+        ((ParallelInvocationDispatcher)dispatcher).resetResponseTimes();
     }
 
     public void describeTo(Description description) {

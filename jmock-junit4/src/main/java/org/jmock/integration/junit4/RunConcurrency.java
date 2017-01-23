@@ -41,7 +41,7 @@ public class RunConcurrency extends Statement {
 
     @Override
     public void evaluate() throws Throwable {
-        System.out.println("Repeats: " + repeat);
+        System.out.println("Concurrent threads: " + repeat);
 
         Runnable r = new Runnable() {
             @Override
