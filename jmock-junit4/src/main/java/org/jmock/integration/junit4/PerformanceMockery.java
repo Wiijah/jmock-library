@@ -9,7 +9,9 @@ import org.junit.runners.model.Statement;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 
 import static org.junit.Assert.fail;
@@ -22,7 +24,7 @@ public class PerformanceMockery extends Mockery implements MethodRule {
     public final Object lock = new Object();
     public int test = 0;
 
-    private Object currentMockObject;
+    private Map<String, Object> currentMocks = new HashMap<String, Object>();
 
     public void addThread(Thread thread) {
         threads.add(thread);
@@ -37,18 +39,21 @@ public class PerformanceMockery extends Mockery implements MethodRule {
 
     @SuppressWarnings("unchecked")
     public synchronized <T> T perfMock(Class<T> typeToMock) {
-        if (currentMockObject != null) {
-            return (T) currentMockObject;
+        String k = typeToMock.getName();
+        Object v = currentMocks.get(k);
+        if (v != null) {
+            return (T) v;
         } else {
-            T tempMockObject = mock(typeToMock);
-            currentMockObject = tempMockObject;
-            return tempMockObject;
+            T mock = mock(typeToMock);
+            currentMocks.put(k, mock);
+            return mock;
         }
     }
 
     public void performanceMockeryCleanup() {
         threads.clear();
-        currentMockObject = null;
+        System.out.println("Clearing up currentMocks");
+        currentMocks.clear();
         somethingElse();
     }
 
