@@ -4,11 +4,8 @@ import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.math3.stat.descriptive.rank.Percentile;
 import org.jmock.Expectations;
 import org.jmock.integration.junit4.AnotherMockery;
-import org.jmock.integration.junit4.Performance;
-import org.jmock.integration.junit4.PerformanceTestRunner;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import java.util.List;
 
@@ -17,13 +14,11 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.lessThan;
 import static org.junit.Assert.assertThat;
 
-@RunWith(PerformanceTestRunner.class)
 public class AnotherJUnitTest {
     @Rule
     public AnotherMockery context = new AnotherMockery();
 
     @Test
-    @Performance
     public void eachSubscriberReceivesSameMessage() {
         // set up
         final Subscriber subscriber = context.mock(Subscriber.class);

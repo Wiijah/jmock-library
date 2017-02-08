@@ -3,6 +3,8 @@ package org.jmock.integration.junit4;
 import org.jmock.PerformanceTest;
 import org.jmock.auto.internal.Mockomatic;
 import org.jmock.internal.AllDeclaredFields;
+import org.jmock.internal.ParallelInvocationDispatcher;
+import org.jmock.lib.concurrent.Synchroniser;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
@@ -19,11 +21,18 @@ import static org.junit.Assert.fail;
 public class AnotherMockery extends JUnit4Mockery implements MethodRule {
     private final Mockomatic mockomatic = new Mockomatic(this);
 
+    // TODO Tidy this shit up
     public final Object lock = new Object();
     public int testVal = 0;
     private final CountDownLatch startSignal = new CountDownLatch(1);
     private List<Thread> threads = new ArrayList<Thread>();
     private Map<String, Object> currentMocks = new HashMap<String, Object>();
+    
+    public AnotherMockery() {
+        setThreadingPolicy(new Synchroniser());
+        setNamingScheme(new UniqueNamingScheme());
+        setInvocationDispatcher(new ParallelInvocationDispatcher());
+    }
 
     public Statement apply(final Statement base, FrameworkMethod method, final Object target) {
         return new Statement() {

@@ -2,18 +2,15 @@ package ic.doc;
 
 import org.jmock.Expectations;
 import org.jmock.integration.junit4.JUnitRuleMockery;
-import org.jmock.integration.junit4.PerformanceTestRunner;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Result;
-import org.junit.runner.RunWith;
 
 public class GettingStartedJUnit4Rule {
     @Rule
     public JUnitRuleMockery context = new JUnitRuleMockery();
 
-    @RunWith(PerformanceTestRunner.class)
     public class NestedLocalClass {
         public NestedLocalClass() {
             System.out.println("NestedLocalClass()");
