@@ -24,28 +24,26 @@ public class AnotherJUnitTest {
         final Subscriber subscriber = context.mock(Subscriber.class);
 
         context.runInThreads(10, () -> {
-                Publisher publisher = new Publisher();
-                publisher.add(subscriber);
+            Publisher publisher = new Publisher();
+            publisher.add(subscriber);
 
-                final String message = "message";
+            final String message = "message";
 
-                // expectations
-                context.checking(new Expectations() {{
-                    oneOf(subscriber).receive(message);
-                    responseTime(uniform(100, 200));
-                }});
+            // expectations
+            context.checking(new Expectations() {{
+                oneOf(subscriber).receive(message);
+                responseTime(uniform(100, 155));
+            }});
 
-                // execute
-                publisher.publish(message);
+            // execute
+            publisher.publish(message);
         });
 
         assertThat(percentile(80, context.runtimes()), is(lessThan(150.0)));
     }
-
 }
 
 class Statistics {
-
     public static double percentile(int i, List<Double> runTimes) {
         return new Percentile().evaluate(ArrayUtils.toPrimitive(runTimes.toArray(new Double[0])), i);
     }
