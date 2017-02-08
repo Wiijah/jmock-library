@@ -1,5 +1,8 @@
 package org.jmock.integration.junit4;
 
+import org.jmock.internal.AllDeclaredFields;
+import org.jmock.internal.ParallelInvocationDispatcher;
+import org.jmock.lib.concurrent.Synchroniser;
 import org.junit.internal.AssumptionViolatedException;
 import org.junit.internal.runners.model.EachTestNotifier;
 import org.junit.internal.runners.model.ReflectiveCallable;
@@ -23,38 +26,6 @@ public class PerformanceTestRunner extends BlockJUnit4ClassRunner {
         super(testClass);
     }
 
-    private int getRepeats(Repeat annotation) {
-        if (annotation == null) {
-            return 1;
-        }
-        return annotation.value();
-    }
-
-    @Override
-    protected void runChild(final FrameworkMethod method, RunNotifier notifier) {
-        Description description = describeChild(method);
-        int repeats = getRepeats(method.getAnnotation(Repeat.class));
-        if (isIgnored(method)) {
-            notifier.fireTestIgnored(description);
-        } else {
-            Statement statement = methodBlock(method);
-            EachTestNotifier eachNotifier = new EachTestNotifier(notifier, description);
-            eachNotifier.fireTestStarted();
-            for (int i = 0; i < repeats; ++i) {
-                try {
-                    statement.evaluate();
-                } catch (AssumptionViolatedException e) {
-                    // TODO - Need to change this!
-                    eachNotifier.addFailedAssumption(e);
-                } catch (Throwable e) {
-                    // TODO - Need to change this!
-                    eachNotifier.addFailure(e);
-                }
-            }
-            eachNotifier.fireTestFinished();
-        }
-    }
-
     @Override
     protected Statement methodBlock(FrameworkMethod method) {
         Object test;
@@ -69,18 +40,27 @@ public class PerformanceTestRunner extends BlockJUnit4ClassRunner {
             return new Fail(e);
         }
 
-        PerfExpectation annotation = method.getAnnotation(PerfExpectation.class);
-        if (annotation != null) {
-            try {
-                System.out.println("Making a new instance of PerfExpectation!");
-                annotation.expectation().newInstance();
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            } catch (InstantiationException e) {
-                e.printStackTrace();
+        if (method.getAnnotation(Performance.class) != null) {
+            Field mockField = null;
+            AnotherMockery mockery = null;
+            List<Field> allFields = AllDeclaredFields.in(test.getClass());
+            for (Field field : allFields) {
+                if (AnotherMockery.class.isAssignableFrom(field.getType())) {
+                    mockField = field;
+                }
             }
-        } else {
-            System.out.println("There is no @PerfExpectation");
+            if (mockField != null) {
+                try {
+                    mockery = (AnotherMockery) mockField.get(test);
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                }
+                if (mockery != null) {
+                    mockery.setThreadingPolicy(new Synchroniser());
+                    mockery.setNamingScheme(new UniqueNamingScheme());
+                    mockery.setInvocationDispatcher(new ParallelInvocationDispatcher());
+                }
+            }
         }
 
         Statement statement = methodInvoker(method, test);
@@ -89,14 +69,12 @@ public class PerformanceTestRunner extends BlockJUnit4ClassRunner {
         statement = withBefores(method, test, statement);
         statement = withAfters(method, test, statement);
         statement = withRules(method, test, statement);
-        statement = withRepeat(method, test, statement);
         return statement;
     }
 
     protected Statement withRepeat(FrameworkMethod method, Object target, Statement statement) {
         return new RunConcurrency(method, target, statement);
     }
-
     /* Not sure why but these are private in BlockJUnit4ClassRunner.
      * Copy and pasted verbatim. */
     private Statement withRules(FrameworkMethod method, Object target,
@@ -120,6 +98,7 @@ public class PerformanceTestRunner extends BlockJUnit4ClassRunner {
     }
 
     private List<org.junit.rules.MethodRule> getMethodRules(Object target) {
+        List<org.junit.rules.MethodRule> r = rules(target);
         return rules(target);
     }
 

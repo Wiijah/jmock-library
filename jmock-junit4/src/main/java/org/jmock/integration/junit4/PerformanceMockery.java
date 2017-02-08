@@ -1,13 +1,16 @@
 package org.jmock.integration.junit4;
 
 import org.jmock.Mockery;
+import org.jmock.PerformanceTest;
 import org.jmock.auto.internal.Mockomatic;
 import org.jmock.internal.AllDeclaredFields;
+import org.junit.internal.runners.statements.InvokeMethod;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -22,19 +25,63 @@ public class PerformanceMockery extends Mockery implements MethodRule {
     private final Mockomatic mockomatic = new Mockomatic(this);
     private List<Thread> threads = new ArrayList<Thread>();
     public final Object lock = new Object();
-    public int test = 0;
+    public int testVal = 0;
 
     private Map<String, Object> currentMocks = new HashMap<String, Object>();
+    private final CountDownLatch startSignal = new CountDownLatch(1);
 
-    public void addThread(Thread thread) {
-        threads.add(thread);
-    }
+    public void run(final PerformanceTest test) {
+        try {
+            Method method = test.getClass().getMethod("testMethod");
+            FrameworkMethod frameworkMethod = new FrameworkMethod(method);
+            Statement statement = new InvokeMethod(frameworkMethod, test);
+            statement = apply(statement, frameworkMethod, test);
+            statement.evaluate();
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        } catch (Throwable e) {
+            e.printStackTrace();
+        }
 
-    public void start(CountDownLatch startSignal) {
+        Runnable r = new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    startSignal.await();
+                    test.testMethod();
+                    synchronized (lock) {
+                        testVal++;
+                        lock.notifyAll();
+                    }
+                } catch (Throwable e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+
+        int repeat = test.getThreads();
+        for (int i = 0; i < repeat; i++) {
+            threads.add(new Thread(r));
+        }
+
         for (Thread t : threads) {
             t.start();
         }
         startSignal.countDown();
+
+        synchronized (lock) {
+            while (testVal < repeat) {
+                try {
+                    lock.wait();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        testVal = 0;
+        overallResponseTimes(repeat);
+        System.out.println("----------");
+        performanceMockeryCleanup();
     }
 
     @SuppressWarnings("unchecked")
@@ -52,7 +99,6 @@ public class PerformanceMockery extends Mockery implements MethodRule {
 
     public void performanceMockeryCleanup() {
         threads.clear();
-        System.out.println("Clearing up currentMocks");
         currentMocks.clear();
         somethingElse();
     }
@@ -66,7 +112,7 @@ public class PerformanceMockery extends Mockery implements MethodRule {
                 assertIsSatisfied();
                 doExtraThings();
                 synchronized (lock) {
-                    test++;
+                    testVal++;
                     lock.notifyAll();
                 }
             }

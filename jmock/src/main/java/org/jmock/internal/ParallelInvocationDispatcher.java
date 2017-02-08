@@ -4,9 +4,7 @@ import org.hamcrest.Description;
 import org.jmock.api.Expectation;
 import org.jmock.api.Invocation;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class ParallelInvocationDispatcher extends InvocationDispatcher {
     private static final ThreadLocal<InvocationDispatcher> dispatchers = new ThreadLocal<InvocationDispatcher>() {
@@ -48,6 +46,12 @@ public class ParallelInvocationDispatcher extends InvocationDispatcher {
         Long k = Thread.currentThread().getId();
         Double v = getTotalResponseTime();
         responseTimes.put(k, v);
+    }
+    
+    @Override
+    public List<Double> getAllRuntimes() {
+        System.out.println("ParallelInvocationDispatcher#runtimes " + responseTimes.size());
+        return new ArrayList<>(responseTimes.values());
     }
 
     @Override

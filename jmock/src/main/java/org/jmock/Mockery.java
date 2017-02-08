@@ -10,10 +10,7 @@ import org.jmock.lib.IdentityExpectationErrorTranslator;
 import org.jmock.lib.JavaReflectionImposteriser;
 import org.jmock.lib.concurrent.Synchroniser;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 
 /**
@@ -223,6 +220,11 @@ public class Mockery implements SelfDescribing {
         dispatcher.calculateTotalResponseTime();
         dispatcher.reset();
         mockNames.clear();
+    }
+    
+    
+    public List<Double> runtimes() {
+	    return dispatcher.getAllRuntimes();
     }
 
     public void overallResponseTimes(int repeats) {

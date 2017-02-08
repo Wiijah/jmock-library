@@ -57,16 +57,16 @@ public class RunConcurrency extends Statement {
 
         for (int i = 0; i < repeat; i++) {
             Thread t = new Thread(r);
-            mockery.addThread(t);
+            //mockery.addThread(t);
         }
-        mockery.start(startSignal);
+        //mockery.start(startSignal);
 
         synchronized (mockery.lock) {
-            while (mockery.test < repeat) {
+            while (mockery.testVal < repeat) {
                 mockery.lock.wait();
             }
         }
-        mockery.test = 0;
+        mockery.testVal = 0;
         mockery.overallResponseTimes(repeat);
         System.out.println("----------");
         mockery.performanceMockeryCleanup();

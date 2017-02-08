@@ -1,66 +1,71 @@
 package ic.doc;
 
 import org.jmock.Expectations;
-import org.jmock.integration.junit4.*;
+import org.jmock.integration.junit4.JUnitRuleMockery;
+import org.jmock.integration.junit4.PerformanceTestRunner;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.JUnitCore;
+import org.junit.runner.Result;
 import org.junit.runner.RunWith;
 
-@RunWith(PerformanceTestRunner.class)
 public class GettingStartedJUnit4Rule {
-  @Rule
-  public PerformanceMockery context = PerformanceMockery.INSTANCE;
-  //public JUnitRuleMockery context = new JUnitRuleMockery();
+    @Rule
+    public JUnitRuleMockery context = new JUnitRuleMockery();
 
-  @Test
-  @Repeat(value=2)
-  @Concurrency(threads=5)
-  @PerfExpectation(expectation=APerfExpectationClass.class)
-  public void oneSubscriberReceivesAMessage() {
-    // set up
-    final Subscriber subscriber1 = context.perfMock(Subscriber.class);
+    @RunWith(PerformanceTestRunner.class)
+    public class NestedLocalClass {
+        public NestedLocalClass() {
+            System.out.println("NestedLocalClass()");
+        }
+        
+        @Rule
+        public JUnitRuleMockery context2 = new JUnitRuleMockery();
 
-    Publisher publisher = new Publisher();
-    publisher.add(subscriber1);
+        @Test
+        public void aTestMethod() {
+            final Subscriber subscriber2 = context2.mock(Subscriber.class);
 
-    final String message = "message";
-    final String message2 = "message2";
+            Publisher publisher = new Publisher();
+            publisher.add(subscriber2);
 
-    // expectations
-    context.checking(new Expectations() {{
-      oneOf(subscriber1).receive(message);
-      responseTime(uniform(10, 100));
-      
-      exactly(4).of(subscriber1).receive(message2);
-      responseTime(uniform(1000, 10000));
-    }});
+            final String message = "message";
 
-    // execute
-    publisher.publish(message);
-    
-    publisher.publish(message2);
-    publisher.publish(message2);
-    publisher.publish(message2);
-    publisher.publish(message2);
-  }
+            // expectations
+            context2.checking(new Expectations() {{
+                oneOf(subscriber2).receive(message);
+            }});
 
-  @Test
-  public void testMethod2() {
-    // set up
-    final Subscriber subscriber = context.perfMock(Subscriber.class);
+            System.out.println("NestedLocalClass#aTestMethod");
 
-    Publisher publisher = new Publisher();
-    publisher.add(subscriber);
+            // execute
+            publisher.publish(message);
+        }
+    }
 
-    final String message = "message";
+    @Test
+    public void oneSubscriberReceivesAMessage() {
+        // set up
+        final Subscriber subscriber = context.mock(Subscriber.class);
 
-    // expectations
-    context.checking(new Expectations() {{
-      oneOf(subscriber).receive(message);
-      responseTime(uniform(20, 200));
-    }});
+        //TestClass testClass = new TestClass(NestedLocalClass.class);
 
-    // execute
-    publisher.publish(message);
-  }
+        System.out.println("Before");
+        Result r = JUnitCore.runClasses(NestedLocalClass.class);
+        System.out.println(r.wasSuccessful());
+        System.out.println("After");
+
+        Publisher publisher = new Publisher();
+        publisher.add(subscriber);
+
+        final String message = "message";
+
+        // expectations
+        context.checking(new Expectations() {{
+            oneOf(subscriber).receive(message);
+        }});
+
+        // execute
+        publisher.publish(message);
+    }
 }
