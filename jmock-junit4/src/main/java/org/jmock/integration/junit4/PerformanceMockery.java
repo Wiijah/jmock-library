@@ -10,15 +10,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 
-public class AnotherMockery extends JUnitRuleMockery implements MethodRule {
-    // TODO Tidy this shit up
+public class PerformanceMockery extends JUnitRuleMockery implements MethodRule {
+    // TODO Tidy up
     public final Object lock = new Object();
     public int testVal = 0;
     private final CountDownLatch startSignal = new CountDownLatch(1);
     private List<Thread> threads = new ArrayList<Thread>();
     private Map<String, Object> currentMocks = new HashMap<String, Object>();
 
-    public AnotherMockery() {
+    public PerformanceMockery() {
         setThreadingPolicy(new Synchroniser());
         setInvocationDispatcher(new ParallelInvocationDispatcher());
     }

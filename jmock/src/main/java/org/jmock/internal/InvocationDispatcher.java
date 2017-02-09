@@ -12,8 +12,6 @@ public class InvocationDispatcher implements ExpectationCollector, SelfDescribin
 	private List<Expectation> expectations = new ArrayList<Expectation>();
 	private List<StateMachine> stateMachines = new ArrayList<StateMachine>();
 	private Double totalResponseTime = null;
-	
-    public final Map<Long, Double> responseTimes = Collections.synchronizedMap(new HashMap<Long, Double>());
     
     public StateMachine newStateMachine(String name) {
         StateMachine stateMachine = new StateMachine(name);
@@ -75,7 +73,7 @@ public class InvocationDispatcher implements ExpectationCollector, SelfDescribin
         }
     }
 
-    public double getTotalResponseTime() {
+    public double totalResponseTime() {
         return totalResponseTime;
     }
 

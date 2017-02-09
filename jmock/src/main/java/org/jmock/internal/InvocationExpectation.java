@@ -36,17 +36,7 @@ public class InvocationExpectation implements Expectation {
     
 	private int invocationCount = 0;
     private double responseTime = 0.0;
-
-    @Override
-    public String toString() {
-        StringDescription description = new StringDescription();
-        objectMatcher.describeTo(description);
-        description.appendText(".");
-        methodMatcher.describeTo(description);
-        parametersMatcher.describeTo(description);
-        return description.toString();
-    }
-
+       
     public void setCardinality(Cardinality cardinality) {
         this.cardinality = cardinality;
     }

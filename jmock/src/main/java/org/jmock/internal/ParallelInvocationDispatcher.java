@@ -7,56 +7,40 @@ import org.jmock.api.Invocation;
 import java.util.*;
 
 public class ParallelInvocationDispatcher extends InvocationDispatcher {
-    private static final ThreadLocal<InvocationDispatcher> dispatchers = new ThreadLocal<InvocationDispatcher>() {
-        @Override
-        protected InvocationDispatcher initialValue() {
-            return new InvocationDispatcher();
-        }
-    };
-
+    private static final ThreadLocal<InvocationDispatcher> dispatchers = ThreadLocal.withInitial(InvocationDispatcher::new);
     private final Map<Long, Double> responseTimes = Collections.synchronizedMap(new HashMap<Long, Double>());
-
-    private InvocationDispatcher myInvocationDispatcher() {
-        return dispatchers.get();
-    }
 
     @Override
     public StateMachine newStateMachine(String name) {
-        return myInvocationDispatcher().newStateMachine(name);
+        return dispatchers.get().newStateMachine(name);
     }
 
     @Override
     public void add(Expectation expectation) {
-        myInvocationDispatcher().add(expectation);
+        dispatchers.get().add(expectation);
     }
 
     @Override
     public void describeTo(Description description) {
-        myInvocationDispatcher().describeTo(description);
+        dispatchers.get().describeTo(description);
     }
 
     @Override
     public void describeMismatch(Invocation invocation, Description description) {
-        myInvocationDispatcher().describeMismatch(invocation, description);
+        dispatchers.get().describeMismatch(invocation, description);
     }
 
     @Override
     public void calculateTotalResponseTime() {
-        myInvocationDispatcher().calculateTotalResponseTime();
+        dispatchers.get().calculateTotalResponseTime();
         Long k = Thread.currentThread().getId();
-        Double v = getTotalResponseTime();
+        Double v = totalResponseTime();
         responseTimes.put(k, v);
-    }
-    
-    @Override
-    public List<Double> getAllRuntimes() {
-        System.out.println("ParallelInvocationDispatcher#runtimes " + responseTimes.size());
-        return new ArrayList<>(responseTimes.values());
     }
 
     @Override
-    public double getTotalResponseTime() {
-        return myInvocationDispatcher().getTotalResponseTime();
+    public double totalResponseTime() {
+        return dispatchers.get().totalResponseTime();
     }
 
     @Override
@@ -65,23 +49,29 @@ public class ParallelInvocationDispatcher extends InvocationDispatcher {
             System.out.println("Thread: " + e.getKey() + ", Total response time: " + e.getValue());
         }
     }
-    
+
+    @Override
+    public List<Double> getAllRuntimes() {
+        System.out.println("ParallelInvocationDispatcher#runtimes " + responseTimes.size());
+        return new ArrayList<>(responseTimes.values());
+    }
+
     public void resetResponseTimes() {
         responseTimes.clear();
     }
 
     @Override
     public boolean isSatisfied() {
-        return myInvocationDispatcher().isSatisfied();
+        return dispatchers.get().isSatisfied();
     }
 
     @Override
     public Object dispatch(Invocation invocation) throws Throwable {
-        return myInvocationDispatcher().dispatch(invocation);
+        return dispatchers.get().dispatch(invocation);
     }
 
     @Override
     public void reset() {
-        myInvocationDispatcher().reset();
+        dispatchers.get().reset();
     }
 }
