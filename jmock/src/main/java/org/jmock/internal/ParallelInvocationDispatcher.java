@@ -3,12 +3,24 @@ package org.jmock.internal;
 import org.hamcrest.Description;
 import org.jmock.api.Expectation;
 import org.jmock.api.Invocation;
+import org.jmock.internal.perfmodel.network.NetworkDispatcher;
 
+import javax.management.RuntimeErrorException;
 import java.util.*;
 
 public class ParallelInvocationDispatcher extends InvocationDispatcher {
-    private static final ThreadLocal<InvocationDispatcher> dispatchers = ThreadLocal.withInitial(InvocationDispatcher::new);
-    private final Map<Long, Double> responseTimes = Collections.synchronizedMap(new HashMap<Long, Double>());
+    private final NetworkDispatcher networkDispatcher;
+    private final ThreadLocal<InvocationDispatcher> dispatchers;
+    private final Map<Long, Double> threadResponseTimes = Collections.synchronizedMap(new HashMap<Long, Double>());
+
+    public ParallelInvocationDispatcher(NetworkDispatcher networkDispatcher) {
+        this.networkDispatcher = networkDispatcher;
+        this.dispatchers = ThreadLocal.withInitial(() -> {
+            InvocationDispatcher dispatcher = new InvocationDispatcher();
+            dispatcher.setNetworkDispatcher(this.networkDispatcher);
+            return dispatcher;
+        });
+    }
 
     @Override
     public StateMachine newStateMachine(String name) {
@@ -31,11 +43,14 @@ public class ParallelInvocationDispatcher extends InvocationDispatcher {
     }
 
     @Override
-    public void calculateTotalResponseTime() {
-        dispatchers.get().calculateTotalResponseTime();
-        Long k = Thread.currentThread().getId();
-        Double v = totalResponseTime();
-        responseTimes.put(k, v);
+    public void updateResponseTime() {
+        throw new RuntimeException("NO");
+    }
+
+    @Override
+    public void updateResponseTime(long threadId) {
+        dispatchers.get().updateResponseTime(threadId);
+        System.out.println("<!> Thread " + threadId + " " + dispatchers.get().totalResponseTime());
     }
 
     @Override
@@ -44,20 +59,8 @@ public class ParallelInvocationDispatcher extends InvocationDispatcher {
     }
 
     @Override
-    public void overallResponseTimes(int repeats) {
-        for (Map.Entry<Long, Double> e : responseTimes.entrySet()) {
-            System.out.println("Thread: " + e.getKey() + ", Total response time: " + e.getValue());
-        }
-    }
-
-    @Override
     public List<Double> getAllRuntimes() {
-        System.out.println("ParallelInvocationDispatcher#runtimes " + responseTimes.size());
-        return new ArrayList<>(responseTimes.values());
-    }
-
-    public void resetResponseTimes() {
-        responseTimes.clear();
+        return new ArrayList<>(threadResponseTimes.values());
     }
 
     @Override
@@ -67,11 +70,11 @@ public class ParallelInvocationDispatcher extends InvocationDispatcher {
 
     @Override
     public Object dispatch(Invocation invocation) throws Throwable {
-        return dispatchers.get().dispatch(invocation);
-    }
-
-    @Override
-    public void reset() {
-        dispatchers.get().reset();
+        // multiple A calling one or more Bs
+        Object ret = dispatchers.get().dispatch(invocation);
+        Long k = Thread.currentThread().getId();
+        Double v = totalResponseTime();
+        threadResponseTimes.put(k, v);
+        return ret;
     }
 }

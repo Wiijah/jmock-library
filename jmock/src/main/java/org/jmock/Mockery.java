@@ -1,6 +1,5 @@
 package org.jmock;
 
-import org.apache.tools.ant.taskdefs.Parallel;
 import org.hamcrest.Description;
 import org.hamcrest.SelfDescribing;
 import org.jmock.api.*;
@@ -27,13 +26,13 @@ import java.util.*;
 public class Mockery implements SelfDescribing {
     private Imposteriser imposteriser = JavaReflectionImposteriser.INSTANCE;
     private ExpectationErrorTranslator expectationErrorTranslator = IdentityExpectationErrorTranslator.INSTANCE;
-    private MockObjectNamingScheme namingScheme = CamelCaseNamingScheme.INSTANCE;
+    protected MockObjectNamingScheme namingScheme = CamelCaseNamingScheme.INSTANCE;
     private ThreadingPolicy threadingPolicy = new SingleThreadedPolicy();
 
-    private final Set<String> mockNames = new HashSet<String>();
+    protected final Set<String> mockNames = new HashSet<String>();
     private final ReturnDefaultValueAction defaultAction = new ReturnDefaultValueAction(imposteriser);
     private final List<Invocation> actualInvocations = new ArrayList<Invocation>();
-    private InvocationDispatcher dispatcher = new InvocationDispatcher();
+    protected InvocationDispatcher dispatcher = new InvocationDispatcher();
 
     private Error firstError = null;
 
@@ -142,10 +141,9 @@ public class Mockery implements SelfDescribing {
         mockNames.add(name);
         
         Invokable invokable =
-            threadingPolicy.synchroniseAccessTo(
-                new ProxiedObjectIdentity(
-                    new InvocationDiverter<CaptureControl>(
-                        CaptureControl.class, mock, mock)));
+            new ProxiedObjectIdentity(
+                new InvocationDiverter<CaptureControl>(
+                    CaptureControl.class, mock, mock));
         
         return imposteriser.imposterise(invokable, typeToMock, CaptureControl.class);
     }
@@ -215,26 +213,15 @@ public class Mockery implements SelfDescribing {
                 ExpectationError.notAllSatisfied(this));
         }
 	}
-    
-    protected void doExtraThings() {
-        dispatcher.calculateTotalResponseTime();
-        dispatcher.reset();
-        mockNames.clear();
+
+	public void assertPerformanceIsSatisfied() {
+        System.out.println("Mockery#assertPerformanceIsSatisfied");
     }
-    
     
     public List<Double> runtimes() {
 	    return dispatcher.getAllRuntimes();
     }
-
-    public void overallResponseTimes(int repeats) {
-        dispatcher.overallResponseTimes(repeats);
-    }
     
-    protected void somethingElse() {
-        ((ParallelInvocationDispatcher)dispatcher).resetResponseTimes();
-    }
-
     public void describeTo(Description description) {
         description.appendDescriptionOf(dispatcher);
         describeHistory(description);

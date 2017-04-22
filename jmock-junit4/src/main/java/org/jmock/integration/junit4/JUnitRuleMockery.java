@@ -47,6 +47,8 @@ public class JUnitRuleMockery extends JUnit4Mockery implements MethodRule {
                 prepare(target);
                 base.evaluate();
                 assertIsSatisfied();
+                // check performance expectations here
+                assertPerformanceIsSatisfied();
             }
 
             private void prepare(final Object target) {

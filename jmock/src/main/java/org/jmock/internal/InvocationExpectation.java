@@ -2,12 +2,8 @@ package org.jmock.internal;
 
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
-import org.hamcrest.StringDescription;
 import org.hamcrest.core.IsAnything;
-import org.jmock.api.Action;
-import org.jmock.api.Distribution;
-import org.jmock.api.Expectation;
-import org.jmock.api.Invocation;
+import org.jmock.api.*;
 import org.jmock.internal.matcher.MethodMatcher;
 import org.jmock.lib.action.VoidAction;
 
@@ -30,13 +26,11 @@ public class InvocationExpectation implements Expectation {
 	private ParametersMatcher parametersMatcher = ANY_PARAMETERS;
     private Action action = new VoidAction();
     private boolean actionIsDefault = true;
-    private Distribution distribution;
     private List<OrderingConstraint> orderingConstraints = new ArrayList<OrderingConstraint>();
     private List<SideEffect> sideEffects = new ArrayList<SideEffect>();
     
 	private int invocationCount = 0;
-    private double responseTime = 0.0;
-       
+
     public void setCardinality(Cardinality cardinality) {
         this.cardinality = cardinality;
     }
@@ -77,10 +71,6 @@ public class InvocationExpectation implements Expectation {
         this.actionIsDefault = true;
     }
     
-    public void setDistribution(Distribution dist) {
-        this.distribution = dist;
-    }
-
     public void describeTo(Description description) {
         if (! isSatisfied()) {
             description.appendText("! ");
@@ -172,8 +162,6 @@ public class InvocationExpectation implements Expectation {
 		performSideEffects();
 		final Object result = action.invoke(invocation);
         invocation.checkReturnTypeCompatibility(result);
-        addResponseTime();
-        //invocation.getInvokedMethod().invoke(queuingModel);
         return result;
 	}
 
@@ -181,16 +169,6 @@ public class InvocationExpectation implements Expectation {
         for (SideEffect sideEffect : sideEffects) {
             sideEffect.perform();
         }
-    }
-    
-    private void addResponseTime() {
-        if (distribution != null) {
-            responseTime += distribution.sample();
-        }
-    }
-
-    public double getResponseTime() {
-        return responseTime;
     }
 
     private static class AnyParametersMatcher extends IsAnything<Object[]> implements ParametersMatcher {

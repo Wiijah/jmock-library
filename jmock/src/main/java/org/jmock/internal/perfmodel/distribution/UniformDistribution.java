@@ -1,6 +1,4 @@
-package org.jmock.lib.distribution;
-
-import org.jmock.api.Distribution;
+package org.jmock.internal.perfmodel.distribution;
 
 public class UniformDistribution implements Distribution {
     private final double lower;

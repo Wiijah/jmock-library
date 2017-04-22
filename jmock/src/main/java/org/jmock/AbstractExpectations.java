@@ -4,13 +4,9 @@ import org.hamcrest.CoreMatchers;
 import org.hamcrest.Matcher;
 import org.hamcrest.core.*;
 import org.jmock.api.Action;
-import org.jmock.api.Distribution;
 import org.jmock.internal.*;
+import org.jmock.internal.perfmodel.distribution.*;
 import org.jmock.lib.action.*;
-import org.jmock.lib.distribution.ExponentialDistribution;
-import org.jmock.lib.distribution.ParetoDistribution;
-import org.jmock.lib.distribution.PoissonDistribution;
-import org.jmock.lib.distribution.UniformDistribution;
 import org.jmock.syntax.*;
 
 import java.util.ArrayList;
@@ -237,9 +233,6 @@ public abstract class AbstractExpectations implements ExpectationBuilder,
         currentBuilder().setAction(action);
     }
     
-    public void responseTime(Distribution dist) {
-        currentBuilder().setDistribution(dist);
-    }
 
     /* Common constraints
      */

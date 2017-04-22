@@ -54,10 +54,6 @@ public class InvocationExpectationBuilder
         needsDefaultAction = false;
     }
     
-    public void setDistribution(Distribution dist) {
-        expectation.setDistribution(dist);
-    }
-
     public void addSideEffect(SideEffect sideEffect) {
         expectation.addSideEffect(sideEffect);
     }

@@ -5,14 +5,17 @@ import org.hamcrest.SelfDescribing;
 import org.jmock.api.Expectation;
 import org.jmock.api.ExpectationError;
 import org.jmock.api.Invocation;
+import org.jmock.internal.perfmodel.network.NetworkDispatcher;
 
 import java.util.*;
 
 public class InvocationDispatcher implements ExpectationCollector, SelfDescribing {
-	private List<Expectation> expectations = new ArrayList<Expectation>();
-	private List<StateMachine> stateMachines = new ArrayList<StateMachine>();
-	private Double totalResponseTime = null;
-    
+    private List<Expectation> expectations = new ArrayList<Expectation>();
+    private List<StateMachine> stateMachines = new ArrayList<StateMachine>();
+    // Total response time for an entire test method
+    private double totalResponseTime = 0.0;
+    protected NetworkDispatcher networkDispatcher;
+
     public StateMachine newStateMachine(String name) {
         StateMachine stateMachine = new StateMachine(name);
         stateMachines.add(stateMachine);
@@ -36,7 +39,10 @@ public class InvocationDispatcher implements ExpectationCollector, SelfDescribin
         return new Iterable<SelfDescribing>() {
             public Iterator<SelfDescribing> iterator() {
                 return new Iterator<SelfDescribing>() {
-                    public boolean hasNext() { return iterator.hasNext(); }
+                    public boolean hasNext() {
+                        return iterator.hasNext();
+                    }
+
                     public SelfDescribing next() {
                         return new SelfDescribing() {
                             public void describeTo(Description description) {
@@ -44,7 +50,10 @@ public class InvocationDispatcher implements ExpectationCollector, SelfDescribin
                             }
                         };
                     }
-                    public void remove() { iterator.remove(); }
+
+                    public void remove() {
+                        iterator.remove();
+                    }
                 };
             }
         };
@@ -64,26 +73,26 @@ public class InvocationDispatcher implements ExpectationCollector, SelfDescribin
         }
     }
 
-    public void calculateTotalResponseTime() {
-        if (totalResponseTime == null) {
-            totalResponseTime = 0.0;
-            for (Expectation expectation : expectations) {
-                totalResponseTime += ((InvocationExpectation)expectation).getResponseTime();
-            }
-        }
+    public void updateResponseTime() {
+        totalResponseTime = networkDispatcher.finalExitEventTime();
+    }
+
+    public void updateResponseTime(long threadId) {
+        totalResponseTime = networkDispatcher.finalExitEventTime(threadId);
     }
 
     public double totalResponseTime() {
         return totalResponseTime;
     }
 
-    public void overallResponseTimes(int repeats) {
-        System.out.println(totalResponseTime);
+    // TODO 11-04: Check if still necessary
+    public List<Double> getAllRuntimes() {
+        // TODO fix this for the non-parallel test method case
+        return Arrays.asList(totalResponseTime);
     }
 
-    public List<Double> getAllRuntimes() {
-        System.out.println("InvocationDispatcher#runtimes");
-        return new ArrayList<Double>();
+    public void setNetworkDispatcher(NetworkDispatcher dispatcher) {
+        this.networkDispatcher = dispatcher;
     }
 
     public boolean isSatisfied() {
@@ -98,6 +107,8 @@ public class InvocationDispatcher implements ExpectationCollector, SelfDescribin
 	public Object dispatch(Invocation invocation) throws Throwable {
 		for (Expectation expectation : expectations) {
 		    if (expectation.matches(invocation)) {
+                networkDispatcher.query(invocation);
+                // FIXME thread safe way of updating totalResponseTime
 		        return expectation.invoke(invocation);
             }
         }
@@ -105,8 +116,5 @@ public class InvocationDispatcher implements ExpectationCollector, SelfDescribin
         throw ExpectationError.unexpected("unexpected invocation", invocation);
 	}
 
-	public void reset() {
-        expectations.clear();
-    }
 
 }
