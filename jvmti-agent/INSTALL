@@ -1,0 +1,3 @@
+gcc -c -fPIC -I/usr/lib/jvm/default/include/ -I/usr/lib/jvm/default/include/linux -o agent_util.o agent_util.c
+
+g++ -fPIC -shared -I/usr/lib/jvm/default/include/ -I/usr/lib/jvm/default/include/linux -o libagent.so agent.cpp agent_util.o
