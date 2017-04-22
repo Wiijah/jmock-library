@@ -107,7 +107,9 @@ public class InvocationDispatcher implements ExpectationCollector, SelfDescribin
 	public Object dispatch(Invocation invocation) throws Throwable {
 		for (Expectation expectation : expectations) {
 		    if (expectation.matches(invocation)) {
-                networkDispatcher.query(invocation);
+		        if (networkDispatcher != null) {
+                    networkDispatcher.query(invocation);
+                }
                 // FIXME thread safe way of updating totalResponseTime
 		        return expectation.invoke(invocation);
             }
