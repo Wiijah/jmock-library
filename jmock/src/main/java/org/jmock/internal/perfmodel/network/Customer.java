@@ -1,5 +1,6 @@
 package org.jmock.internal.perfmodel.network;
 
+import org.jmock.api.Invocation;
 import org.jmock.internal.perfmodel.Sim;
 
 public class Customer {
@@ -9,6 +10,7 @@ public class Customer {
     private final Sim sim;
     private final long threadId;
     private final int id;
+    private final Invocation invocation;
     private Node location;
     private int type;
     private int priority;
@@ -19,18 +21,19 @@ public class Customer {
 
     private double aTime;
 
-    public Customer(Network network, Sim sim, long threadId) {
-        this(network, sim, threadId, 0);
+    public Customer(Network network, Sim sim, long threadId, Invocation invocation) {
+        this(network, sim, threadId, invocation, 0);
     }
 
-    public Customer(Network network, Sim sim, long threadId, int type) {
-        this(network, sim, threadId, type, 0);
+    public Customer(Network network, Sim sim, long threadId, Invocation invocation, int type) {
+        this(network, sim, threadId, invocation, type, 0);
     }
 
-    public Customer(Network network, Sim sim, long threadId, int type, int priority) {
+    public Customer(Network network, Sim sim, long threadId, Invocation invocation, int type, int priority) {
         this.network = network;
         this.sim = sim;
         this.threadId = threadId;
+        this.invocation = invocation;
         this.id = customerId++;
         this.location = network.nullNode;
         this.type = type;
@@ -45,6 +48,10 @@ public class Customer {
 
     public long threadId() {
         return threadId;
+    }
+
+    public Invocation invocation() {
+        return invocation;
     }
 
     public int id() {

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+.bar rect {
+  fill: steelblue;
+}
+
+.bar text {
+  fill: #fff;
+  font: 10px sans-serif;
+}
+
+</style>
+<svg width="960" height="500"></svg>
+<script src="d3.min.js"></script>
+<script>
+
+var linspace = function(start, stop, nsteps) {
+    delta = (stop - start) / (nsteps - 1);
+    return d3.range(nsteps).map(function(i) { return start + i * delta; });
+}
+
+//var data = [0.08450833271750034, 0.08743138307731357, 0.15098848199217652, 0.2430507483467746, 0.33705003447067317, 0.34148520204438687, 0.4703604543903109, 0.4737582953463679, 0.5713775379005536, 0.7355911620063803]
+
+var tmp = function(n, e) {
+    var foo = new Array(e.length-1).fill(0);
+    for (var i = 0, len = n.length; i < len; i++) {
+        for (var j = 0, len2 = e.length; j < (len2 - 1); j++) {
+            var l = e[j];
+            var h = e[j+1];
+            if (n[i] >= l && n[i] < h) {
+                foo[j] += 1;
+            }
+        }
+    }
+    return foo;
+}
+
+var max = Math.max.apply(null, data);
+var min = Math.min.apply(null, data);
+
+var formatCount = d3.format(",.0f");
+
+var svg = d3.select("svg"),
+    margin = {top: 10, right: 30, bottom: 30, left: 30},
+    width = +svg.attr("width") - margin.left - margin.right,
+    height = +svg.attr("height") - margin.top - margin.bottom,
+    g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+var x = d3.scaleLinear()
+    .domain([min, max])
+    .rangeRound([0, width]);
+
+var bins = d3.histogram()
+    .domain([min, max])
+    .thresholds(d3.thresholdFreedmanDiaconis)
+    (data);
+
+var y = d3.scaleLinear()
+    .domain([0, d3.max(bins, function(d) { return d.length; })])
+    .range([height, 0]);
+
+var bar = g.selectAll(".bar")
+  .data(bins)
+  .enter().append("g")
+    .attr("class", "bar")
+    .attr("transform", function(d) { return "translate(" + x(d.x0) + "," + y(d.length) + ")"; });
+
+bar.append("rect")
+    .attr("x", 1)
+    .attr("width", function(d) { return x(d.x1) - x(d.x0) - 1; })
+    .attr("height", function(d) { return height - y(d.length); });
+
+bar.append("text")
+    .attr("dy", ".75em")
+    .attr("y", 6)
+    .attr("x", function(d) { return (x(d.x1) - x(d.x0)) / 2; })
+    .attr("text-anchor", "middle")
+    .text(function(d) { return formatCount(d.length); });
+
+g.append("g")
+    .attr("class", "axis axis--x")
+    .attr("transform", "translate(0," + height + ")")
+    .call(d3.axisBottom(x));
+
+</script>

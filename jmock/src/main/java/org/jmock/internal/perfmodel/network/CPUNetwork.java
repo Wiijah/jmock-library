@@ -28,7 +28,7 @@ public class CPUNetwork extends Network {
     }
 
     public void query(long threadId, Invocation invocation) {
-        Customer customer = new Customer(this, sim, Thread.currentThread().getId());
+        Customer customer = new Customer(this, sim, Thread.currentThread().getId(), invocation);
         psNode.enter(customer);
     }
 }

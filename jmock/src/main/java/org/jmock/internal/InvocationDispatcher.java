@@ -10,11 +10,16 @@ import org.jmock.internal.perfmodel.network.NetworkDispatcher;
 import java.util.*;
 
 public class InvocationDispatcher implements ExpectationCollector, SelfDescribing {
-    private List<Expectation> expectations = new ArrayList<Expectation>();
+    private static NetworkDispatcher networkDispatcher;
+
+    private List<Expectation> expectations = Collections.synchronizedList(new ArrayList<Expectation>());
     private List<StateMachine> stateMachines = new ArrayList<StateMachine>();
     // Total response time for an entire test method
     private double totalResponseTime = 0.0;
-    protected NetworkDispatcher networkDispatcher;
+
+    public static void setNetworkDispatcher(NetworkDispatcher dispatcher) {
+        networkDispatcher = dispatcher;
+    }
 
     public StateMachine newStateMachine(String name) {
         StateMachine stateMachine = new StateMachine(name);
@@ -73,11 +78,9 @@ public class InvocationDispatcher implements ExpectationCollector, SelfDescribin
         }
     }
 
-    public void updateResponseTime() {
-        totalResponseTime = networkDispatcher.finalExitEventTime();
-    }
-
     public void updateResponseTime(long threadId) {
+        // FIXME 15-05: CHILD should use parent's InvocationDispatcher?
+        // When parent calls this, the finalExitEvenTime indexed by threadId is obviously NULL!
         totalResponseTime = networkDispatcher.finalExitEventTime(threadId);
     }
 
@@ -89,10 +92,6 @@ public class InvocationDispatcher implements ExpectationCollector, SelfDescribin
     public List<Double> getAllRuntimes() {
         // TODO fix this for the non-parallel test method case
         return Arrays.asList(totalResponseTime);
-    }
-
-    public void setNetworkDispatcher(NetworkDispatcher dispatcher) {
-        this.networkDispatcher = dispatcher;
     }
 
     public boolean isSatisfied() {

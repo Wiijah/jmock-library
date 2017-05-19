@@ -4,7 +4,9 @@ import org.jmock.api.Invocation;
 import org.jmock.internal.perfmodel.PerformanceModel;
 import org.jmock.internal.perfmodel.Sim;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -13,11 +15,14 @@ public class NetworkDispatcher {
     private final Sim sim;
     private final Semaphore mockerySemaphore;
 
-    private final Map<String, PerformanceModel> models = new HashMap<>();
-    private final Map<Long, Semaphore> threadSemaphores = new HashMap<>();
+    private final Map<String, PerformanceModel> models = Collections.synchronizedMap(new HashMap<>());
+    private final Map<Long, Semaphore> threadSemaphores = Collections.synchronizedMap(new HashMap<>());
     private final AtomicInteger threadsInQuery = new AtomicInteger();
 
     private AtomicInteger aliveThreads;
+    
+    public static final Map<Long, List<Long>> parentThreads = Collections.synchronizedMap(new HashMap<>());
+    public static final Map<Long, Long> childToParentMap = Collections.synchronizedMap(new HashMap<>());
 
     public NetworkDispatcher(Sim sim, Semaphore mockerySemaphore) {
         this.sim = sim;
@@ -26,10 +31,6 @@ public class NetworkDispatcher {
 
     public long tick() {
         return sim.runOnce();
-    }
-
-    public double finalExitEventTime() {
-        return sim.finalExitEventTime();
     }
 
     public double finalExitEventTime(long threadId) {
@@ -52,13 +53,12 @@ public class NetworkDispatcher {
         aliveThreads = threads;
     }
 
-    // TODO 10-04: This is called by multiple threads, make sure it is safe
     public void query(Invocation invocation) {
         long threadId = Thread.currentThread().getId();
         PerformanceModel model = models.get(invocation.getInvokedObject().toString());
 
+        System.out.println("Thread " + threadId + " new invocation " + invocation.getInvokedMethod());
         model.query(threadId, invocation);
-        // TODO 12-04: Store a per-thread exit time in Sim?
         // For the case of one A, the response time of A is the last exiting thread
         // For the case of multiple A, the response time of each A is the sum of all mocked calls
 

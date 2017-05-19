@@ -38,6 +38,7 @@ public class Node {
         this.link = link;
     }
 
+    // FIXME 15-05: multithread
     protected void enter(Customer customer) {
         arrivals++;
         customer.setLocation(this);

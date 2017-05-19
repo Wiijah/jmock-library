@@ -8,39 +8,67 @@ import org.jmock.internal.perfmodel.network.ISNetwork;
 import org.junit.Rule;
 import org.junit.Test;
 
+import static org.hamcrest.Matchers.lessThan;
+import static org.junit.Assert.assertThat;
+import static org.jmock.api.Statistics.percentile;
+
+
 public class ThreadedTest {
     @Rule
     public PerformanceMockery context = new PerformanceMockery();
 
     @Test
-    public void oneACreatesTwoThreads() {
+    public void thisIsATest() {
+        // each A can create further threads
         final DBService dbService = context.mock(DBService.class, new ISNetwork(context.sim(), new Delay(new Exp(2))));
         final WebService webService = context.mock(WebService.class, new ISNetwork(context.sim(), new Delay(new Exp(3))));
-        context.testWillCreateThreads(2);
 
-        Runnable dbrunnable = () -> {
-            long dbRes = dbService.query();
-        };
-        Thread dbthread = new ic.doc.Thread(dbrunnable);
+        // outer loop, repeats, sequential
+        context.repeat(100, () -> {
+            // inner loop, runInThreads, number of As, threaded
+            context.runInThreads(10, 2, () -> {
+                context.checking(new Expectations() {{
+                    oneOf(dbService).query();
+                    oneOf(webService).request();
+                }});
 
-        Runnable wsrunnable = () -> {
-            long wsRes = webService.request();
-        };
-        Thread wsthread = new ic.doc.Thread(wsrunnable);
+                new A(dbService, webService).run();
+            });
 
-        context.checking(new Expectations() {{
-            oneOf(dbService).query();
-            oneOf(webService).request();
-        }});
-
-        dbthread.start();
-        wsthread.start();
-        try {
-            dbthread.join();
-            wsthread.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        context.cleanUp();
+            // specify some kind of perf expectation here...
+        });
     }
+
+
+    class A {
+        private DBService dbService;
+        private WebService webService;
+
+        A(DBService dbService, WebService webService) {
+            this.dbService = dbService;
+            this.webService = webService;
+        }
+
+        void run() {
+            Runnable dbrunnable = () -> {
+                long dbRes = dbService.query();
+            };
+            Thread dbthread = new Thread(dbrunnable);
+
+            Runnable wsrunnable = () -> {
+                long wsRes = webService.request();
+            };
+            Thread wsthread = new Thread(wsrunnable);
+
+            dbthread.start();
+            wsthread.start();
+            try {
+                dbthread.join();
+                wsthread.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
 }
