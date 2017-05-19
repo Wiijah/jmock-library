@@ -56,6 +56,7 @@
         <module>jmock-junit4</module>
         <module>jmock-legacy</module>
         <module>jmock-example</module>
+        <module>jmock-perf-test</module>
     </modules>
 
     <build>
