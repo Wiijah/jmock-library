@@ -8,6 +8,8 @@ import org.jmock.internal.perfmodel.network.ISNetwork;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.util.List;
+
 public class FooTest {
     @Rule
     public PerformanceMockery context = new PerformanceMockery();
@@ -19,12 +21,12 @@ public class FooTest {
 
         context.runInThreads(10, () -> {
             context.checking(new Expectations() {{
-                oneOf(dbService).query();
-                oneOf(webService).request();
+                oneOf(dbService).query(1001L);
+                oneOf(webService).lookup(with(any(Long.class)));
             }});
 
-            long dbRes = dbService.query();
-            long wsRes = webService.request();
+            List<Long> friends = dbService.query(1001L);
+            User user = webService.lookup(friends.get(0));
         });
     }
 }

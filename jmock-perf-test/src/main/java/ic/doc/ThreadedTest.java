@@ -8,12 +8,17 @@ import org.jmock.internal.perfmodel.network.ISNetwork;
 import org.junit.Rule;
 import org.junit.Test;
 
-import static org.hamcrest.Matchers.lessThan;
+import java.util.Arrays;
+import java.util.List;
+
 import static org.junit.Assert.assertThat;
-import static org.jmock.api.Statistics.percentile;
 
 
 public class ThreadedTest {
+
+    static final long userId = 10001;
+    static final List<Long> friends = Arrays.asList(2222L, 3333L, 4444L, 5555L);
+
     @Rule
     public PerformanceMockery context = new PerformanceMockery();
 
@@ -28,11 +33,11 @@ public class ThreadedTest {
             // inner loop, runInThreads, number of As, threaded
             context.runInThreads(10, 2, () -> {
                 context.checking(new Expectations() {{
-                    oneOf(dbService).query();
-                    oneOf(webService).request();
+                    oneOf(dbService).query(userId);
+                    oneOf(webService).lookup(friends.get(0));
                 }});
 
-                new A(dbService, webService).run();
+                new Controller(dbService, webService).makeRequest();
             });
 
             // specify some kind of perf expectation here...
@@ -40,23 +45,23 @@ public class ThreadedTest {
     }
 
 
-    class A {
+    class Controller {
         private DBService dbService;
         private WebService webService;
 
-        A(DBService dbService, WebService webService) {
+        Controller(DBService dbService, WebService webService) {
             this.dbService = dbService;
             this.webService = webService;
         }
 
-        void run() {
+        void makeRequest() {
             Runnable dbrunnable = () -> {
-                long dbRes = dbService.query();
+                List<Long> friends = dbService.query(1001L);
             };
             Thread dbthread = new Thread(dbrunnable);
 
             Runnable wsrunnable = () -> {
-                long wsRes = webService.request();
+                User wsRes = webService.lookup(friends.get(0));
             };
             Thread wsthread = new Thread(wsrunnable);
 

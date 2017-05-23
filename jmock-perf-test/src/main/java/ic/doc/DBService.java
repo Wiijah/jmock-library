@@ -1,5 +1,7 @@
 package ic.doc;
 
+import java.util.List;
+
 public interface DBService {
-    long query();
+    List<Long> query(long id);
 }
