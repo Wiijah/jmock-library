@@ -21,6 +21,7 @@ public class PerformanceMockery extends JUnitRuleMockery implements MethodRule {
 
     private final Sim sim = new Sim();
     private final CountDownLatch startSignal = new CountDownLatch(1);
+    private CountDownLatch doneSignal;
     private final Semaphore mockerySemaphore = new Semaphore(0);
     private final AtomicInteger aliveThreads = new AtomicInteger();
     private final NetworkDispatcher networkDispatcher = new NetworkDispatcher(sim, mockerySemaphore);
@@ -64,15 +65,6 @@ public class PerformanceMockery extends JUnitRuleMockery implements MethodRule {
                 PerformanceMockery.INSTANCE.endThreadCallback();
             }
         });
-
-        PerfMockInstrumenter.setBeforeExecuteCallback(() -> {
-            System.out.println("<*> Task starting on thread " + Thread.currentThread().getId());
-        });
-
-        PerfMockInstrumenter.setAfterExecuteCallback(() -> {
-            // FIXME 18-05: Need per-task response time
-            System.out.println("<!> Task ending on thread " + Thread.currentThread().getId());
-        });
     }
 
     public PerformanceMockery() {
@@ -96,8 +88,6 @@ public class PerformanceMockery extends JUnitRuleMockery implements MethodRule {
                 }
                 // FIXME Debug message
                 System.out.println("Main thread finished");
-                System.out.println(threadResponseTimes);
-                writeHtml();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -118,6 +108,7 @@ public class PerformanceMockery extends JUnitRuleMockery implements MethodRule {
     }
 
     private void endOuterThreadCallback() {
+        System.out.println("<!> endOuterThreadCallback");
         threadResponseTimes.add(sim.finalThreadResponseTime());
     }
 
@@ -148,7 +139,12 @@ public class PerformanceMockery extends JUnitRuleMockery implements MethodRule {
     }
 
     public void repeat(int times, final Runnable test) {
-        test.run();
+        for (int i = 0; i < times; i++) {
+            test.run();
+            mockerySemaphore.drainPermits();
+        }
+        System.out.println(threadResponseTimes);
+        writeHtml();
     }
 
     public void runInThreads(int numThreads, final Runnable testScenario) {
@@ -179,12 +175,14 @@ public class PerformanceMockery extends JUnitRuleMockery implements MethodRule {
 
     public void runInThreads(int numThreads, int eachCreates, final Runnable testScenario) {
         setInvocationDispatcher(new ParallelInvocationDispatcher());
+        this.doneSignal = new CountDownLatch(numThreads);
         Runnable r = () -> {
             try {
                 startSignal.await();
                 testScenario.run();
                 assertIsSatisfied();
                 endOuterThreadCallback();
+                doneSignal.countDown();
             } catch (Throwable e) {
                 e.printStackTrace();
             }
@@ -201,19 +199,10 @@ public class PerformanceMockery extends JUnitRuleMockery implements MethodRule {
         }
         startSignal.countDown();
         mainThreadRunnable.run();
-    }
-
-    public void testWillCreateThreads(int numThreads) {
-        int currentAliveThreads = aliveThreads.get();
-        if (currentAliveThreads == 0) {
-            aliveThreads.set(numThreads);
-            networkDispatcher.setAliveThreads(aliveThreads);
-        } else {
-            System.out.println("<!> 2nd branch in testWillCreateThreads lol");
-            // already set by outer runInThreads
-            aliveThreads.set(currentAliveThreads * numThreads);
+        try {
+            doneSignal.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
-        mainThread.start();
-        // FIXME 17-04: Missing a call to assertIsSatisfied()?
     }
 }
