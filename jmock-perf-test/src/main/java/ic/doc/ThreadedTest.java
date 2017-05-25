@@ -8,10 +8,6 @@ import org.jmock.internal.perfmodel.network.ISNetwork;
 import org.junit.Rule;
 import org.junit.Test;
 
-import static org.hamcrest.Matchers.lessThan;
-import static org.junit.Assert.assertThat;
-import static org.jmock.api.Statistics.percentile;
-
 
 public class ThreadedTest {
     @Rule
@@ -38,7 +34,6 @@ public class ThreadedTest {
             // specify some kind of perf expectation here...
         });
     }
-
 
     class A {
         private DBService dbService;
@@ -70,5 +65,4 @@ public class ThreadedTest {
             }
         }
     }
-
 }

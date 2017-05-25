@@ -108,7 +108,6 @@ public class PerformanceMockery extends JUnitRuleMockery implements MethodRule {
     }
 
     private void endOuterThreadCallback() {
-        System.out.println("<!> endOuterThreadCallback");
         threadResponseTimes.add(sim.finalThreadResponseTime());
     }
 

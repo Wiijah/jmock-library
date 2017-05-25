@@ -23,34 +23,48 @@ public class ExecutorTest {
 
         context.repeat(10, () -> {
             context.runInThreads(2, 5, () -> {
-                ExecutorService es = Executors.newFixedThreadPool(5);
-                Runnable task = () -> {
-                    long dbRes = dbService.query();
-                    long wsRes = webService.request();
-                };
-
                 context.checking(new Expectations() {{
                     exactly(20).of(dbService).query();
                     exactly(20).of(webService).request();
                 }});
 
-                for (int i = 0; i < 20; i++) {
-                    es.submit(task);
-                }
-
-                try {
-                    es.shutdown();
-                    es.awaitTermination(30, TimeUnit.SECONDS);
-                } catch (InterruptedException e) {
-                    System.err.print("task interrupted");
-                } finally {
-                    if (!es.isTerminated()) {
-                        System.err.println("cancel unfinished tasks");
-                    }
-                    es.shutdownNow();
-                    System.out.println("shutdown finished");
-                }
+                new A(dbService, webService).run();
             });
         });
+    }
+
+    class A {
+        private DBService dbService;
+        private WebService webService;
+
+        A(DBService dbService, WebService webService) {
+            this.dbService = dbService;
+            this.webService = webService;
+        }
+
+        void run() {
+            ExecutorService es = Executors.newFixedThreadPool(5);
+            Runnable task = () -> {
+                long dbRes = dbService.query();
+                long wsRes = webService.request();
+            };
+
+            for (int i = 0; i < 20; i++) {
+                es.submit(task);
+            }
+
+            try {
+                es.shutdown();
+                es.awaitTermination(30, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                System.err.print("task interrupted");
+            } finally {
+                if (!es.isTerminated()) {
+                    System.err.println("cancel unfinished tasks");
+                }
+                es.shutdownNow();
+                System.out.println("shutdown finished");
+            }
+        }
     }
 }

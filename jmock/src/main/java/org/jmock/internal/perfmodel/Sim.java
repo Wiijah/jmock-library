@@ -59,6 +59,12 @@ public class Sim {
     // This is called from the outer parent thread always.
     public double finalThreadResponseTime() {
         long threadId = Thread.currentThread().getId();
+        if (perThreadEntryTime.get(threadId) == null) {
+            System.out.println("<!> PARENT THREAD " + threadId + " NULL ENTRY TIME");
+        }
+        if (perThreadExitTime.get(threadId) == null) {
+            System.out.println("<!> PARENT THREAD " + threadId + " NULL EXIT TIME");
+        }
         return perThreadExitTime.get(threadId) - perThreadEntryTime.get(threadId);
     }
 }
