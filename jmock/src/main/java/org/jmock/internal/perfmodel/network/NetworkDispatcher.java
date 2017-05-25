@@ -33,10 +33,6 @@ public class NetworkDispatcher {
         return sim.runOnce();
     }
 
-    public double finalExitEventTime(long threadId) {
-        return sim.finalExitEventTime(threadId);
-    }
-
     public void registerModel(String defaultName, PerformanceModel model) {
         models.put(defaultName, model);
     }
@@ -57,6 +53,7 @@ public class NetworkDispatcher {
         long threadId = Thread.currentThread().getId();
         PerformanceModel model = models.get(invocation.getInvokedObject().toString());
 
+        // need to know about thread's parent...
         System.out.println("Thread " + threadId + " new invocation " + invocation.getInvokedMethod());
         model.query(threadId, invocation);
         // For the case of one A, the response time of A is the last exiting thread

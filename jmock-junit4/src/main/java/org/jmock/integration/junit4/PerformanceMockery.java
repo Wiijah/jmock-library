@@ -7,6 +7,10 @@ import org.jmock.internal.perfmodel.Sim;
 import org.jmock.internal.perfmodel.network.NetworkDispatcher;
 import org.junit.rules.MethodRule;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Semaphore;
@@ -17,16 +21,17 @@ public class PerformanceMockery extends JUnitRuleMockery implements MethodRule {
 
     private final Sim sim = new Sim();
     private final CountDownLatch startSignal = new CountDownLatch(1);
+    private CountDownLatch doneSignal;
     private final Semaphore mockerySemaphore = new Semaphore(0);
     private final AtomicInteger aliveThreads = new AtomicInteger();
     private final NetworkDispatcher networkDispatcher = new NetworkDispatcher(sim, mockerySemaphore);
 
     private final Runnable mainThreadRunnable;
     private final Thread mainThread;
+    private final List<Double> threadResponseTimes = Collections.synchronizedList(new ArrayList<>());
 
     static final Map<Long, List<Long>> parentThreads = Collections.synchronizedMap(new HashMap<>());
     static final Map<Long, Long> childToParentMap = Collections.synchronizedMap(new HashMap<>());
-    static AtomicInteger count = new AtomicInteger(0);
 
     static {
         PerfMockInstrumenter.setPreCallback((Thread newlyCreatedThread) -> {
@@ -60,16 +65,6 @@ public class PerformanceMockery extends JUnitRuleMockery implements MethodRule {
                 PerformanceMockery.INSTANCE.endThreadCallback();
             }
         });
-
-        PerfMockInstrumenter.setBeforeExecuteCallback(() -> {
-            System.out.println("<*> Task starting on thread " + Thread.currentThread().getId());
-        });
-
-        PerfMockInstrumenter.setAfterExecuteCallback(() -> {
-            // FIXME 18-05: Need per-task response time
-            System.out.println("<!> Task ending on thread " + Thread.currentThread().getId());
-            count.incrementAndGet();
-        });
     }
 
     public PerformanceMockery() {
@@ -93,8 +88,6 @@ public class PerformanceMockery extends JUnitRuleMockery implements MethodRule {
                 }
                 // FIXME Debug message
                 System.out.println("Main thread finished");
-                sim.testMethod();
-                System.out.println(count.get());
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -106,13 +99,32 @@ public class PerformanceMockery extends JUnitRuleMockery implements MethodRule {
         return sim;
     }
 
-    // TODO 01-05: Need two different types of end-callback, for A and X
     public void endThreadCallback() {
         // FIXME Debug message
         System.out.println("Thread " + Thread.currentThread().getId() + " about to die, going to wake main thread");
         //dispatcher.updateResponseTime(Thread.currentThread().getId());
         aliveThreads.decrementAndGet();
         mockerySemaphore.release();
+    }
+
+    private void endOuterThreadCallback() {
+        threadResponseTimes.add(sim.finalThreadResponseTime());
+    }
+
+    private void writeHtml() {
+        String tmpDir = System.getProperty("java.io.tmpdir");
+        ClassLoader loader = getClass().getClassLoader();
+        try {
+            List<String> lines = Files.readAllLines(Paths.get(loader.getResource("d3.min.js").getFile()));
+            Files.write(Paths.get(tmpDir, "d3.min.js"), lines);
+            List<String> frontLines = Files.readAllLines(Paths.get(loader.getResource("front.html").getFile()));
+            frontLines.add("var data = " + threadResponseTimes + ";");
+            List<String> backLines = Files.readAllLines(Paths.get(loader.getResource("back.html").getFile()));
+            Files.write(Paths.get(tmpDir, "test.html"), frontLines);
+            Files.write(Paths.get(tmpDir, "test.html"), backLines, StandardOpenOption.APPEND, StandardOpenOption.WRITE);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public <T> T mock(Class<T> typeToMock, PerformanceModel model) {
@@ -126,7 +138,12 @@ public class PerformanceMockery extends JUnitRuleMockery implements MethodRule {
     }
 
     public void repeat(int times, final Runnable test) {
-        test.run();
+        for (int i = 0; i < times; i++) {
+            test.run();
+            mockerySemaphore.drainPermits();
+        }
+        System.out.println(threadResponseTimes);
+        writeHtml();
     }
 
     public void runInThreads(int numThreads, final Runnable testScenario) {
@@ -157,12 +174,14 @@ public class PerformanceMockery extends JUnitRuleMockery implements MethodRule {
 
     public void runInThreads(int numThreads, int eachCreates, final Runnable testScenario) {
         setInvocationDispatcher(new ParallelInvocationDispatcher());
+        this.doneSignal = new CountDownLatch(numThreads);
         Runnable r = () -> {
             try {
                 startSignal.await();
                 testScenario.run();
                 assertIsSatisfied();
-                //endThreadCallback();
+                endOuterThreadCallback();
+                doneSignal.countDown();
             } catch (Throwable e) {
                 e.printStackTrace();
             }
@@ -179,19 +198,10 @@ public class PerformanceMockery extends JUnitRuleMockery implements MethodRule {
         }
         startSignal.countDown();
         mainThreadRunnable.run();
-    }
-
-    public void testWillCreateThreads(int numThreads) {
-        int currentAliveThreads = aliveThreads.get();
-        if (currentAliveThreads == 0) {
-            aliveThreads.set(numThreads);
-            networkDispatcher.setAliveThreads(aliveThreads);
-        } else {
-            System.out.println("<!> 2nd branch in testWillCreateThreads lol");
-            // already set by outer runInThreads
-            aliveThreads.set(currentAliveThreads * numThreads);
+        try {
+            doneSignal.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
-        mainThread.start();
-        // FIXME 17-04: Missing a call to assertIsSatisfied()?
     }
 }

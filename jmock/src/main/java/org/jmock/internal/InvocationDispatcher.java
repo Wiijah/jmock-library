@@ -79,9 +79,6 @@ public class InvocationDispatcher implements ExpectationCollector, SelfDescribin
     }
 
     public void updateResponseTime(long threadId) {
-        // FIXME 15-05: CHILD should use parent's InvocationDispatcher?
-        // When parent calls this, the finalExitEvenTime indexed by threadId is obviously NULL!
-        totalResponseTime = networkDispatcher.finalExitEventTime(threadId);
     }
 
     public double totalResponseTime() {
