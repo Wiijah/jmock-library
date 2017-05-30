@@ -56,7 +56,7 @@ public class ThreadedTest {
 
         void makeRequest() {
             Runnable dbrunnable = () -> {
-                List<Long> friends = dbService.query(1001L);
+                List<Long> friends = dbService.query(10001L);
             };
             Thread dbthread = new Thread(dbrunnable);
 

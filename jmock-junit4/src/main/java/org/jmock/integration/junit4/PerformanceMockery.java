@@ -7,10 +7,6 @@ import org.jmock.internal.perfmodel.Sim;
 import org.jmock.internal.perfmodel.network.NetworkDispatcher;
 import org.junit.rules.MethodRule;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Semaphore;
@@ -19,7 +15,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class PerformanceMockery extends JUnitRuleMockery implements MethodRule {
     public static PerformanceMockery INSTANCE;
 
-    private final Sim sim = new Sim();
     private final CountDownLatch startSignal = new CountDownLatch(1);
     private CountDownLatch doneSignal;
     private final Semaphore mockerySemaphore = new Semaphore(0);
@@ -28,7 +23,6 @@ public class PerformanceMockery extends JUnitRuleMockery implements MethodRule {
 
     private final Runnable mainThreadRunnable;
     private final Thread mainThread;
-    private final List<Double> threadResponseTimes = Collections.synchronizedList(new ArrayList<>());
 
     static final Map<Long, List<Long>> parentThreads = Collections.synchronizedMap(new HashMap<>());
     static final Map<Long, Long> childToParentMap = Collections.synchronizedMap(new HashMap<>());
@@ -111,22 +105,6 @@ public class PerformanceMockery extends JUnitRuleMockery implements MethodRule {
         threadResponseTimes.add(sim.finalThreadResponseTime());
     }
 
-    private void writeHtml() {
-        String tmpDir = System.getProperty("java.io.tmpdir");
-        ClassLoader loader = getClass().getClassLoader();
-        try {
-            List<String> lines = Files.readAllLines(Paths.get(loader.getResource("d3.min.js").getFile()));
-            Files.write(Paths.get(tmpDir, "d3.min.js"), lines);
-            List<String> frontLines = Files.readAllLines(Paths.get(loader.getResource("front.html").getFile()));
-            frontLines.add("var data = " + threadResponseTimes + ";");
-            List<String> backLines = Files.readAllLines(Paths.get(loader.getResource("back.html").getFile()));
-            Files.write(Paths.get(tmpDir, "test.html"), frontLines);
-            Files.write(Paths.get(tmpDir, "test.html"), backLines, StandardOpenOption.APPEND, StandardOpenOption.WRITE);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     public <T> T mock(Class<T> typeToMock, PerformanceModel model) {
         String defaultName = namingScheme.defaultNameFor(typeToMock);
         if (mockNames.contains(defaultName)) {
@@ -142,8 +120,6 @@ public class PerformanceMockery extends JUnitRuleMockery implements MethodRule {
             test.run();
             mockerySemaphore.drainPermits();
         }
-        System.out.println(threadResponseTimes);
-        writeHtml();
     }
 
     public void runInThreads(int numThreads, final Runnable testScenario) {

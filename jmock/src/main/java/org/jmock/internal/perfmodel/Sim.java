@@ -21,7 +21,10 @@ public class Sim {
     }
 
     public void schedule(CustomerEvent e) {
-        long parentThreadId = NetworkDispatcher.childToParentMap.get(e.customerThreadId());
+        Long parentThreadId = NetworkDispatcher.childToParentMap.get(e.customerThreadId());
+        if (parentThreadId == null) {
+            parentThreadId = e.customerThreadId();
+        }
         synchronized (this) {
             if (!perThreadEntryTime.containsKey(parentThreadId)) {
                 perThreadEntryTime.put(parentThreadId, e.customerArrivalTime());
@@ -31,7 +34,10 @@ public class Sim {
     }
 
     public void deschedule(CustomerEvent e) {
-        long parentThreadId = NetworkDispatcher.childToParentMap.get(e.customerThreadId());
+        Long parentThreadId = NetworkDispatcher.childToParentMap.get(e.customerThreadId());
+        if (parentThreadId == null) {
+            parentThreadId = e.customerThreadId();
+        }
         synchronized (this) {
             if (perThreadEntryTime.containsKey(parentThreadId)) {
                 perThreadEntryTime.remove(parentThreadId);
@@ -48,7 +54,11 @@ public class Sim {
             currentVTime = e.invokeTime();
             boolean stop = e.invoke();
             if (stop) {
-                long customerParentThreadId = NetworkDispatcher.childToParentMap.get(e.customerThreadId());
+                Long customerParentThreadId = NetworkDispatcher.childToParentMap.get(e.customerThreadId());
+                if (customerParentThreadId == null) {
+                    customerParentThreadId = e.customerThreadId();
+                }
+                assert (perThreadEntryTime.containsKey(customerParentThreadId));
                 perThreadExitTime.put(customerParentThreadId, currentVTime);
                 return e.customerThreadId();
             }
