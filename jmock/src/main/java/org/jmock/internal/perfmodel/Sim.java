@@ -77,4 +77,10 @@ public class Sim {
         }
         return perThreadExitTime.get(threadId) - perThreadEntryTime.get(threadId);
     }
+
+    public void resetCurrentThread() {
+        long threadId = Thread.currentThread().getId();
+        perThreadEntryTime.remove(threadId);
+        perThreadExitTime.remove(threadId);
+    }
 }

@@ -119,6 +119,11 @@ public class PerformanceMockery extends JUnitRuleMockery implements MethodRule {
         for (int i = 0; i < times; i++) {
             test.run();
             mockerySemaphore.drainPermits();
+            // For the case of repeat but not runInThreads
+            if (threadResponseTimes.size() == i) {
+                threadResponseTimes.add(sim.finalThreadResponseTime());
+                sim.resetCurrentThread();
+            }
         }
     }
 

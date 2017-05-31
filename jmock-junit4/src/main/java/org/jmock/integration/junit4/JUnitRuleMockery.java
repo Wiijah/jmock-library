@@ -76,7 +76,9 @@ public class JUnitRuleMockery extends JUnit4Mockery implements MethodRule {
                 assertIsSatisfied();
                 // check performance expectations here
                 assertPerformanceIsSatisfied();
+                // For the case of no repeat and no runInThreads
                 if (threadResponseTimes.isEmpty()) {
+                    System.out.println("<!> Yes");
                     threadResponseTimes.add(sim.finalThreadResponseTime());
                 }
                 System.out.println(threadResponseTimes);
