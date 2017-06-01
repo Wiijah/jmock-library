@@ -55,6 +55,7 @@ public class PerformanceMockery extends JUnitRuleMockery implements MethodRule {
         });
 
         PerfMockInstrumenter.setPostCallback((Thread currentThread) -> {
+            // Only for child threads
             if (!parentThreads.containsKey(currentThread.getId())) {
                 PerformanceMockery.INSTANCE.endThreadCallback();
             }
@@ -96,7 +97,7 @@ public class PerformanceMockery extends JUnitRuleMockery implements MethodRule {
     public void endThreadCallback() {
         // FIXME Debug message
         System.out.println("Thread " + Thread.currentThread().getId() + " about to die, going to wake main thread");
-        //dispatcher.updateResponseTime(Thread.currentThread().getId());
+        threadResponseTimes.add(sim.finalThreadResponseTime());
         aliveThreads.decrementAndGet();
         mockerySemaphore.release();
     }
@@ -129,12 +130,14 @@ public class PerformanceMockery extends JUnitRuleMockery implements MethodRule {
 
     public void runInThreads(int numThreads, final Runnable testScenario) {
         setInvocationDispatcher(new ParallelInvocationDispatcher());
+        this.doneSignal = new CountDownLatch(numThreads);
         Runnable r = () -> {
             try {
                 startSignal.await();
                 testScenario.run();
                 assertIsSatisfied();
-                //endThreadCallback();
+                endThreadCallback();
+                doneSignal.countDown();
             } catch (Throwable e) {
                 e.printStackTrace();
             }
@@ -151,6 +154,11 @@ public class PerformanceMockery extends JUnitRuleMockery implements MethodRule {
         }
         startSignal.countDown();
         mainThreadRunnable.run();
+        try {
+            doneSignal.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     public void runInThreads(int numThreads, int eachCreates, final Runnable testScenario) {
