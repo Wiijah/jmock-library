@@ -46,7 +46,7 @@ public class Sim {
         diary.remove(e);
     }
 
-    public long runOnce() {
+    public Long runOnce() {
         // FIXME Debug message
         System.out.println("Main thread calling Sim#runOnce: start executing scheduled events, diary size = " + diary.size());
         while (!diary.isEmpty()) {
@@ -63,7 +63,8 @@ public class Sim {
                 return e.customerThreadId();
             }
         }
-        throw new SimDiaryEmptyException();
+        //throw new SimDiaryEmptyException();
+        return null;
     }
 
     // This is called from the outer parent thread always.

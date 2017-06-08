@@ -1,5 +1,8 @@
 package ic.doc;
 
+import examples.SocialGraph;
+import examples.User;
+import examples.UserDetailsService;
 import org.jmock.Expectations;
 import org.jmock.integration.junit4.PerformanceMockery;
 import org.jmock.internal.perfmodel.distribution.Exp;
@@ -24,8 +27,8 @@ public class ParallelRequestsExecutorTest {
     @Test
     public void oneACreatesFiveThreadsViaExecutor() {
 
-        final DBService socialGraph = context.mock(DBService.class, new ISNetwork(context.sim(), new Delay(new Exp(2))));
-        final WebService userDetails = context.mock(WebService.class, new ISNetwork(context.sim(), new Delay(new Exp(3))));
+        final SocialGraph socialGraph = context.mock(SocialGraph.class, new ISNetwork(context.sim(), new Delay(new Exp(2))));
+        final UserDetailsService userDetails = context.mock(UserDetailsService.class, new ISNetwork(context.sim(), new Delay(new Exp(3))));
 
         context.repeat(10, () -> {
             context.runInThreads(1, 2, () -> {
@@ -42,17 +45,17 @@ public class ParallelRequestsExecutorTest {
 
     class Requestor {
 
-        public Requestor(DBService dbService, WebService webService) {
-            this.dbService = dbService;
-            this.webService = webService;
+        public Requestor(SocialGraph socialGraph, UserDetailsService userDetailsService) {
+            this.socialGraph = socialGraph;
+            this.userDetailsService = userDetailsService;
         }
 
-        private DBService dbService;
-        private WebService webService;
+        private SocialGraph socialGraph;
+        private UserDetailsService userDetailsService;
 
         public void lookUpFriends() {
 
-            List<Long> friendIds = dbService.query(userId);
+            List<Long> friendIds = socialGraph.query(userId);
 
             ExecutorService es = Executors.newFixedThreadPool(2);
 
@@ -60,7 +63,7 @@ public class ParallelRequestsExecutorTest {
 
             System.out.println("friendIds size = " + friendIds.size());
             for (Long friend : friendIds) {
-                userDetailsRequests.add(es.submit(() -> webService.lookup(friend)));
+                userDetailsRequests.add(es.submit(() -> userDetailsService.lookup(friend)));
             }
             es.shutdown();
 

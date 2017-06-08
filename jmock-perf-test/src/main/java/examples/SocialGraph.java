@@ -1,7 +1,7 @@
-package ic.doc;
+package examples;
 
 import java.util.List;
 
-public interface DBService {
+public interface SocialGraph {
     List<Long> query(long id);
 }

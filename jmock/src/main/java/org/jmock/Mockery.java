@@ -217,11 +217,7 @@ public class Mockery implements SelfDescribing {
 	public void assertPerformanceIsSatisfied() {
         System.out.println("Mockery#assertPerformanceIsSatisfied");
     }
-    
-    public List<Double> runtimes() {
-	    return dispatcher.getAllRuntimes();
-    }
-    
+
     public void describeTo(Description description) {
         description.appendDescriptionOf(dispatcher);
         describeHistory(description);

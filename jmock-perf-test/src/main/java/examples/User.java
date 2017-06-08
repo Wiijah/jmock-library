@@ -1,3 +1,3 @@
-package ic.doc;
+package examples;
 
 public class User {}

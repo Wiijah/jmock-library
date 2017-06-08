@@ -1,5 +1,8 @@
 package ic.doc;
 
+import examples.SocialGraph;
+import examples.User;
+import examples.UserDetailsService;
 import org.jmock.Expectations;
 import org.jmock.integration.junit4.PerformanceMockery;
 import org.jmock.internal.perfmodel.distribution.Exp;
@@ -25,19 +28,19 @@ public class ThreadedTest {
     @Test
     public void thisIsATest() {
         // each A can create further threads
-        final DBService dbService = context.mock(DBService.class, new ISNetwork(context.sim(), new Delay(new Exp(2))));
-        final WebService webService = context.mock(WebService.class, new ISNetwork(context.sim(), new Delay(new Exp(3))));
+        final SocialGraph socialGraph = context.mock(SocialGraph.class, new ISNetwork(context.sim(), new Delay(new Exp(2))));
+        final UserDetailsService userDetailsService = context.mock(UserDetailsService.class, new ISNetwork(context.sim(), new Delay(new Exp(3))));
 
         // outer loop, repeats, sequential
         context.repeat(100, () -> {
             // inner loop, runInThreads, number of As, threaded
             context.runInThreads(10, 2, () -> {
                 context.checking(new Expectations() {{
-                    oneOf(dbService).query(userId);
-                    oneOf(webService).lookup(friends.get(0));
+                    oneOf(socialGraph).query(userId);
+                    oneOf(userDetailsService).lookup(friends.get(0));
                 }});
 
-                new Controller(dbService, webService).makeRequest();
+                new Controller(socialGraph, userDetailsService).makeRequest();
             });
 
             // specify some kind of perf expectation here...
@@ -46,22 +49,22 @@ public class ThreadedTest {
 
 
     class Controller {
-        private DBService dbService;
-        private WebService webService;
+        private SocialGraph socialGraph;
+        private UserDetailsService userDetailsService;
 
-        Controller(DBService dbService, WebService webService) {
-            this.dbService = dbService;
-            this.webService = webService;
+        Controller(SocialGraph socialGraph, UserDetailsService userDetailsService) {
+            this.socialGraph = socialGraph;
+            this.userDetailsService = userDetailsService;
         }
 
         void makeRequest() {
             Runnable dbrunnable = () -> {
-                List<Long> friends = dbService.query(10001L);
+                List<Long> friends = socialGraph.query(10001L);
             };
             Thread dbthread = new Thread(dbrunnable);
 
             Runnable wsrunnable = () -> {
-                User wsRes = webService.lookup(friends.get(0));
+                User wsRes = userDetailsService.lookup(friends.get(0));
             };
             Thread wsthread = new Thread(wsrunnable);
 

@@ -1,5 +1,8 @@
 package ic.doc;
 
+import examples.SocialGraph;
+import examples.User;
+import examples.UserDetailsService;
 import org.jmock.Expectations;
 import org.jmock.integration.junit4.PerformanceMockery;
 import org.jmock.internal.perfmodel.distribution.Exp;
@@ -23,8 +26,8 @@ public class NoThreadsNoRepeatSpecifiedRequestsExecutorTest {
     @Test
     public void looksUpDetailsForEachFriend() {
 
-        final DBService socialGraph = context.mock(DBService.class, new ISNetwork(context.sim(), new Delay(new Exp(2))));
-        final WebService userDetails = context.mock(WebService.class, new ISNetwork(context.sim(), new Delay(new Exp(3))));
+        final SocialGraph socialGraph = context.mock(SocialGraph.class, new ISNetwork(context.sim(), new Delay(new Exp(2))));
+        final UserDetailsService userDetails = context.mock(UserDetailsService.class, new ISNetwork(context.sim(), new Delay(new Exp(3))));
 
         context.checking(new Expectations() {{
             exactly(1).of(socialGraph).query(USER_ID); will(returnValue(FRIEND_IDS));
@@ -38,21 +41,21 @@ public class NoThreadsNoRepeatSpecifiedRequestsExecutorTest {
 
     class Requestor {
 
-        public Requestor(DBService dbService, WebService webService) {
-            this.dbService = dbService;
-            this.webService = webService;
+        public Requestor(SocialGraph socialGraph, UserDetailsService userDetailsService) {
+            this.socialGraph = socialGraph;
+            this.userDetailsService = userDetailsService;
         }
 
-        private DBService dbService;
-        private WebService webService;
+        private SocialGraph socialGraph;
+        private UserDetailsService userDetailsService;
 
         public void lookUpFriends() {
 
-            List<Long> friendIds = dbService.query(USER_ID);
+            List<Long> friendIds = socialGraph.query(USER_ID);
             List<User> friends = new ArrayList<>();
 
             for (Long friendId : friendIds) {
-                friends.add(webService.lookup(friendId));
+                friends.add(userDetailsService.lookup(friendId));
             }
         }
     }

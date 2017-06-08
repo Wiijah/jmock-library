@@ -13,7 +13,6 @@ import java.util.List;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.lessThan;
-import static org.jmock.api.Statistics.percentile;
 import static org.junit.Assert.assertThat;
 
 public class AnotherJUnitTest {
@@ -44,22 +43,6 @@ public class AnotherJUnitTest {
 
         assertThat(context.runtimes().size(), is(10));
         //assertThat(percentile(80, context.runtimes()), is(lessThan(120.0)));
-        assertThat(context.runtimes(), hasPercentile(80, lessThan(10.0)));
-    }
-
-    private Matcher<List<Double>> hasPercentile(int i, Matcher<Double> percentileCheck) {
-        return new TypeSafeMatcher<List<Double>>() {
-            @Override
-            protected boolean matchesSafely(List<Double> doubles) {
-                return percentileCheck.matches(percentile(i, doubles));
-            }
-
-            @Override
-            public void describeTo(Description description) {
-                HorizontalHistogram hh = new HorizontalHistogram(context.runtimes());
-                hh.print();
-                //description.appendText()
-            }
-        };
+        //assertThat(context.runtimes(), hasPercentile(80, lessThan(10.0)));
     }
 }

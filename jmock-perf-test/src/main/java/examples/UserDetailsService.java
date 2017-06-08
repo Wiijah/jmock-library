@@ -1,5 +1,5 @@
-package ic.doc;
+package examples;
 
-public interface WebService {
+public interface UserDetailsService {
     User lookup(Long userId);
 }

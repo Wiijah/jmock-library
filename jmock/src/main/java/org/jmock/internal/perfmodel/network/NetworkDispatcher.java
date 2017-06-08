@@ -18,8 +18,10 @@ public class NetworkDispatcher {
     private final Map<String, PerformanceModel> models = Collections.synchronizedMap(new HashMap<>());
     private final Map<Long, Semaphore> threadSemaphores = Collections.synchronizedMap(new HashMap<>());
     private final AtomicInteger threadsInQuery = new AtomicInteger();
+    private final AtomicInteger parentsInQuery = new AtomicInteger();
 
     private AtomicInteger aliveThreads;
+    private AtomicInteger aliveParentThreads;
 
     public static final Map<Long, List<Long>> parentThreads = Collections.synchronizedMap(new HashMap<>());
     public static final Map<Long, Long> childToParentMap = Collections.synchronizedMap(new HashMap<>());
@@ -29,7 +31,7 @@ public class NetworkDispatcher {
         this.mockerySemaphore = mockerySemaphore;
     }
 
-    public long tick() {
+    public Long tick() {
         return sim.runOnce();
     }
 
@@ -49,6 +51,10 @@ public class NetworkDispatcher {
         aliveThreads = threads;
     }
 
+    public void setAliveParentThreads(AtomicInteger threads) {
+        aliveParentThreads = threads;
+    }
+
     public void query(Invocation invocation) {
         long threadId = Thread.currentThread().getId();
         PerformanceModel model = models.get(invocation.getInvokedObject().toString());
@@ -59,23 +65,41 @@ public class NetworkDispatcher {
         // For the case of multiple A, the response time of each A is the sum of all mocked calls
         if (threadId > 1) {
             Semaphore currentThreadSemaphore = threadSemaphores.computeIfAbsent(threadId, k -> new Semaphore(0));
-            try {
-                int currentThreadsInQuery = threadsInQuery.incrementAndGet();
-                if (currentThreadsInQuery == aliveThreads.get()) {
-                    // FIXME Debug message
-                    System.out.println("Thread " + threadId + " going to wake main thread");
-                    mockerySemaphore.release();
-                    currentThreadSemaphore.acquire();
-                } else {
-                    // FIXME Debug message
-                    System.out.println("Thread " + threadId + " going to sleep on query()");
-                    currentThreadSemaphore.acquire();
+            if (parentThreads.containsKey(threadId)) {
+                try {
+                    int currentParentsInQuery = parentsInQuery.incrementAndGet();
+                    if (currentParentsInQuery == aliveParentThreads.get()) {
+                        System.out.println("PARENT Thread " + threadId + " in query() going to wake main thread");
+                        mockerySemaphore.release();
+                        currentThreadSemaphore.acquire();
+                    } else {
+                        System.out.println("PARENT Thread " + threadId + " in query() going to sleep");
+                        currentThreadSemaphore.acquire();
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+                parentsInQuery.decrementAndGet();
+            } else {
+                try {
+                    int currentThreadsInQuery = threadsInQuery.incrementAndGet();
+                    if (currentThreadsInQuery == aliveThreads.get()) {
+                        // FIXME Debug message
+                        System.out.println("CHILD Thread " + threadId + " in query() going to wake main thread");
+                        mockerySemaphore.release();
+                        currentThreadSemaphore.acquire();
+                    } else {
+                        // FIXME Debug message
+                        System.out.println("CHILD Thread " + threadId + " in query() going to sleep");
+                        currentThreadSemaphore.acquire();
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                threadsInQuery.decrementAndGet();
             }
-            threadsInQuery.decrementAndGet();
         } else {
+            System.out.println("NEIN NEIN NEIN");
             sim.runOnce();
         }
     }
