@@ -300,4 +300,8 @@ public class PerformanceMockery extends JUnitRuleMockery implements MethodRule {
     public double runtime() {
         return sim.finalThreadResponseTime();
     }
+
+    public void expectThreads(int expectedThreads, Runnable test) {
+        runInThreads(1, expectedThreads, test);
+    }
 }
