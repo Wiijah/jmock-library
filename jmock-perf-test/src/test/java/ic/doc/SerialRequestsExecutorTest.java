@@ -14,6 +14,10 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import static org.hamcrest.Matchers.lessThan;
+import static org.jmock.internal.perfmodel.stats.PerfStatistics.hasPercentile;
+import static org.junit.Assert.assertThat;
+
 public class SerialRequestsExecutorTest {
 
     static final long USER_ID = 1111L;
@@ -39,6 +43,8 @@ public class SerialRequestsExecutorTest {
                 new Requestor(socialGraph, userDetails).lookUpFriends();
             });
         });
+
+        assertThat(context.runtimes(), hasPercentile(80, lessThan(0.1)));
     }
 
     class Requestor {

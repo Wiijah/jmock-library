@@ -58,9 +58,11 @@ public class ParallelRequestsExecutorTest {
 
             List<Future<User>> userDetailsRequests = new ArrayList<>();
 
+            System.out.println("friendIds size = " + friendIds.size());
             for (Long friend : friendIds) {
                 userDetailsRequests.add(es.submit(() -> webService.lookup(friend)));
             }
+            es.shutdown();
 
             List<User> friends = new ArrayList<>();
 

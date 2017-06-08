@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class NoThreadsSpecifiedRequestsExecutorTest {
+public class NoThreadsNoRepeatSpecifiedRequestsExecutorTest {
 
     static final long USER_ID = 1111L;
     static final List<Long> FRIEND_IDS = Arrays.asList(2222L, 3333L, 4444L, 5555L);
@@ -26,15 +26,14 @@ public class NoThreadsSpecifiedRequestsExecutorTest {
         final DBService socialGraph = context.mock(DBService.class, new ISNetwork(context.sim(), new Delay(new Exp(2))));
         final WebService userDetails = context.mock(WebService.class, new ISNetwork(context.sim(), new Delay(new Exp(3))));
 
-        context.repeat(10, () -> {
+        context.checking(new Expectations() {{
+            exactly(1).of(socialGraph).query(USER_ID); will(returnValue(FRIEND_IDS));
+            exactly(4).of(userDetails).lookup(with(any(Long.class))); will(returnValue(new User()));
+        }});
 
-                context.checking(new Expectations() {{
-                    exactly(1).of(socialGraph).query(USER_ID); will(returnValue(FRIEND_IDS));
-                    exactly(4).of(userDetails).lookup(with(any(Long.class))); will(returnValue(new User()));
-                }});
-
-                new Requestor(socialGraph, userDetails).lookUpFriends();
-        });
+        new Requestor(socialGraph, userDetails).lookUpFriends();
+        
+        // assertThat(context.runTimes(), hasPercentile(90, lessThan(500));
     }
 
     class Requestor {
@@ -57,5 +56,4 @@ public class NoThreadsSpecifiedRequestsExecutorTest {
             }
         }
     }
-
 }
