@@ -296,4 +296,8 @@ public class PerformanceMockery extends JUnitRuleMockery implements MethodRule {
         System.out.println(threadResponseTimes);
         writeHtml(method);
     }
+
+    public double runtime() {
+        return sim.finalThreadResponseTime();
+    }
 }

@@ -53,9 +53,7 @@ public class JUnitRuleMockery extends JUnit4Mockery implements MethodRule {
     final List<Double> threadResponseTimes = Collections.synchronizedList(new ArrayList<>());
     final Sim sim = new Sim();
     boolean isMultithreadTest = false;
-
-
-
+    
     public Statement apply(final Statement base, FrameworkMethod method, final Object target) {
         return new Statement() {
             @Override
