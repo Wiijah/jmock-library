@@ -20,7 +20,7 @@ public class PerfStatistics {
 
             @Override
             public void describeTo(Description description) {
-                description.appendText(i + " percentile " + percentileCheck);
+                description.appendText("percentile " + i + " to be " + percentileCheck);
             }
 
             @Override

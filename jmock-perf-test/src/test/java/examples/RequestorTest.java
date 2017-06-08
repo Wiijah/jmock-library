@@ -11,6 +11,7 @@ import java.util.List;
 import static org.jmock.integration.junit4.ResponseTimes.constantDelay;
 import static org.hamcrest.Matchers.lessThan;
 import static org.jmock.integration.junit4.ResponseTimes.exponentialDist;
+import static org.jmock.internal.perfmodel.stats.PerfStatistics.hasPercentile;
 import static org.junit.Assert.assertThat;
 
 public class RequestorTest {
@@ -22,15 +23,18 @@ public class RequestorTest {
 
     @Test
     public void looksUpDetailsForEachFriend() {
-        final SocialGraph socialGraph = context.mock(SocialGraph.class, exponentialDist(5));
-        final UserDetailsService userDetails = context.mock(UserDetailsService.class, exponentialDist(3));
+        final SocialGraph socialGraph = context.mock(SocialGraph.class, exponentialDist(0.01));
+        final UserDetailsService userDetails = context.mock(UserDetailsService.class, exponentialDist(0.005));
+        
+        context.repeat(100, () -> {
+            context.checking(new Expectations() {{
+                exactly(1).of(socialGraph).query(USER_ID); will(returnValue(FRIEND_IDS));
+                exactly(4).of(userDetails).lookup(with(any(Long.class))); will(returnValue(new User()));
+            }});
 
-        context.checking(new Expectations() {{
-            exactly(1).of(socialGraph).query(USER_ID); will(returnValue(FRIEND_IDS));
-            exactly(4).of(userDetails).lookup(with(any(Long.class))); will(returnValue(new User()));
-        }});
+            new Requestor(socialGraph, userDetails).lookUpFriends(USER_ID);
+        });
 
-        new Requestor(socialGraph, userDetails).lookUpFriends(USER_ID);
-        assertThat(context.runtime(), lessThan(1000.0));
+        assertThat(context.runtimes(), hasPercentile(80, lessThan(800.0)));
     }
 }
