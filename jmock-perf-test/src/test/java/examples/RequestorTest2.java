@@ -8,12 +8,11 @@ import org.junit.Test;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.jmock.integration.junit4.ResponseTimes.constantDelay;
 import static org.hamcrest.Matchers.lessThan;
-import static org.jmock.integration.junit4.ResponseTimes.exponentialDist;
+import static org.jmock.integration.junit4.ResponseTimes.constantDelay;
 import static org.junit.Assert.assertThat;
 
-public class RequestorTest {
+public class RequestorTest2 {
     static final long USER_ID = 1111L;
     static final List<Long> FRIEND_IDS = Arrays.asList(2222L, 3333L, 4444L, 5555L);
 
@@ -22,8 +21,8 @@ public class RequestorTest {
 
     @Test
     public void looksUpDetailsForEachFriend() {
-        final SocialGraph socialGraph = context.mock(SocialGraph.class, exponentialDist(5));
-        final UserDetailsService userDetails = context.mock(UserDetailsService.class, exponentialDist(3));
+        final SocialGraph socialGraph = context.mock(SocialGraph.class, constantDelay(200));
+        final UserDetailsService userDetails = context.mock(UserDetailsService.class, constantDelay(100));
 
         context.checking(new Expectations() {{
             exactly(1).of(socialGraph).query(USER_ID); will(returnValue(FRIEND_IDS));
