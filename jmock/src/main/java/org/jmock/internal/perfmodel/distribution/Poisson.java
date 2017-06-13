@@ -1,9 +1,9 @@
 package org.jmock.internal.perfmodel.distribution;
 
-public class PoissonDistribution implements Distribution {
+public class Poisson implements Distribution {
     private final double lambda;
 
-    public PoissonDistribution(double lambda) {
+    public Poisson(double lambda) {
         // FIXME: Error if lambda >= 40.0
         this.lambda = lambda;
     }

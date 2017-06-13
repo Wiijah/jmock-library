@@ -1,16 +1,16 @@
 package org.jmock.internal.perfmodel.distribution;
 
-public class ParetoDistribution implements Distribution {
+public class Pareto implements Distribution {
     private final double k;
     private final double alpha;
 
-    public ParetoDistribution() {
+    public Pareto() {
         this(1, 1);
     }
 
-    public ParetoDistribution(double k, double alpha) {
-        this.k = k;
-        this.alpha = alpha;
+    public Pareto(double scale, double shape) {
+        this.k = scale;
+        this.alpha = shape;
     }
 
     public double sample() {

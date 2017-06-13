@@ -1,14 +1,14 @@
 package org.jmock.internal.perfmodel.distribution;
 
-public class UniformDistribution implements Distribution {
+public class Uniform implements Distribution {
     private final double lower;
     private final double upper;
 
-    public UniformDistribution() {
+    public Uniform() {
         this(0, 1);
     }
 
-    public UniformDistribution(double lower, double upper) {
+    public Uniform(double lower, double upper) {
         // FIXME: Error if lower >= upper
         this.lower = lower;
         this.upper = upper;

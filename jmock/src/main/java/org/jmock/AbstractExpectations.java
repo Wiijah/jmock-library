@@ -318,30 +318,6 @@ public abstract class AbstractExpectations implements ExpectationBuilder,
         return new ActionSequence(actions);
     }
     
-    public static Distribution exponential(double lambda) {
-        return new ExponentialDistribution(lambda);
-    }
-
-    public static Distribution pareto() {
-        return new ParetoDistribution();
-    }
-
-    public static Distribution pareto(double k, double alpha) {
-        return new ParetoDistribution(k, alpha);
-    }
-
-    public static Distribution poisson(double lambda) {
-        return new PoissonDistribution(lambda);
-    }
-
-    public static Distribution uniform() {
-        return new UniformDistribution();
-    }
-
-    public static Distribution uniform(double lower, double upper) {
-        return new UniformDistribution(lower, upper);
-    }
-
     /* Naming and ordering
      */
     
