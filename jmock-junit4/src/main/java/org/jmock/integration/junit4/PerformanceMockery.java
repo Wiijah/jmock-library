@@ -18,6 +18,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class PerformanceMockery extends JUnitRuleMockery implements MethodRule {
@@ -115,7 +116,6 @@ public class PerformanceMockery extends JUnitRuleMockery implements MethodRule {
                 threadResponseTimes.add(sim.finalThreadResponseTime());
                 sim.resetCurrentThread();
             }
-            System.out.println("--------------------------------------------------------------------------------");
         }
     }
 
@@ -254,7 +254,10 @@ public class PerformanceMockery extends JUnitRuleMockery implements MethodRule {
         startSignal.countDown();
         mainThreadRunnable.run();
         try {
-            doneSignal.await();
+            boolean ret = doneSignal.await(2, TimeUnit.SECONDS);
+            if (!ret) {
+                throw new Error("expected " + eachCreates + " threads to be created");
+            }
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
