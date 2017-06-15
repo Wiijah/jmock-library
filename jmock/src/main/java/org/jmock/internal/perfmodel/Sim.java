@@ -47,8 +47,6 @@ public class Sim {
     }
 
     public Long runOnce() {
-        // FIXME Debug message
-        System.out.println("Main thread calling Sim#runOnce: start executing scheduled events, diary size = " + diary.size());
         while (!diary.isEmpty()) {
             CustomerEvent e = diary.poll();
             currentVTime = e.invokeTime();

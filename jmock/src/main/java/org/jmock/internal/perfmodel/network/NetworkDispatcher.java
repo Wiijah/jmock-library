@@ -25,6 +25,7 @@ public class NetworkDispatcher {
 
     public static final Map<Long, List<Long>> parentThreads = Collections.synchronizedMap(new HashMap<>());
     public static final Map<Long, Long> childToParentMap = Collections.synchronizedMap(new HashMap<>());
+    private boolean debug = false;
 
     public NetworkDispatcher(Sim sim, Semaphore mockerySemaphore) {
         this.sim = sim;
@@ -69,11 +70,15 @@ public class NetworkDispatcher {
                 try {
                     int currentParentsInQuery = parentsInQuery.incrementAndGet();
                     if (currentParentsInQuery == aliveParentThreads.get()) {
-                        System.out.println("PARENT Thread " + threadId + " in query() going to wake main thread");
+                        if (debug) {
+                            System.out.println("PARENT Thread " + threadId + " in query() going to wake main thread");
+                        }
                         mockerySemaphore.release();
                         currentThreadSemaphore.acquire();
                     } else {
-                        System.out.println("PARENT Thread " + threadId + " in query() going to sleep");
+                        if (debug) {
+                            System.out.println("PARENT Thread " + threadId + " in query() going to sleep");
+                        }
                         currentThreadSemaphore.acquire();
                     }
                 } catch (InterruptedException e) {
@@ -83,15 +88,19 @@ public class NetworkDispatcher {
             } else {
                 try {
                     int currentThreadsInQuery = threadsInQuery.incrementAndGet();
-                    System.out.println("CHILD Thread " + threadId + " currentThreadsInQuery = " + currentThreadsInQuery);
+                    if (debug) {
+                        System.out.println("CHILD Thread " + threadId + " currentThreadsInQuery = " + currentThreadsInQuery);
+                    }
                     if (currentThreadsInQuery == aliveChildThreads.get()) {
-                        // FIXME Debug message
-                        System.out.println("CHILD Thread " + threadId + " in query() going to wake main thread");
+                        if (debug) {
+                            System.out.println("CHILD Thread " + threadId + " in query() going to wake main thread");
+                        }
                         mockerySemaphore.release();
                         currentThreadSemaphore.acquire();
                     } else {
-                        // FIXME Debug message
-                        System.out.println("CHILD Thread " + threadId + " in query() going to sleep");
+                        if (debug) {
+                            System.out.println("CHILD Thread " + threadId + " in query() going to sleep");
+                        }
                         currentThreadSemaphore.acquire();
                     }
                 } catch (InterruptedException e) {
@@ -100,8 +109,11 @@ public class NetworkDispatcher {
                 threadsInQuery.decrementAndGet();
             }
         } else {
-            System.out.println("NEIN NEIN NEIN");
             sim.runOnce();
         }
+    }
+
+    public void enableDebug() {
+        this.debug = true;
     }
 }

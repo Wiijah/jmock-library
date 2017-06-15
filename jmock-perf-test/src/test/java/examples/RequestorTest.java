@@ -23,15 +23,17 @@ public class RequestorTest {
         final UserDetailsService userDetails = context.mock(UserDetailsService.class, exponentialDist(0.005));
 
         context.repeat(10, () -> {
-            context.expectThreads(2, () -> {
-                context.checking(new Expectations() {{
-                    exactly(1).of(socialGraph).query(USER_ID);
-                    will(returnValue(FRIEND_IDS));
-                    exactly(4).of(userDetails).lookup(with(any(Long.class)));
-                    will(returnValue(new User()));
-                }});
+            context.runConcurrent(2, () -> {
+                context.expectThreads(2, () -> {
+                    context.checking(new Expectations() {{
+                        exactly(1).of(socialGraph).query(USER_ID);
+                        will(returnValue(FRIEND_IDS));
+                        exactly(4).of(userDetails).lookup(with(any(Long.class)));
+                        will(returnValue(new User()));
+                    }});
 
-                new ParallelRequestor(socialGraph, userDetails).lookUpFriends(USER_ID);
+                    new ParallelRequestor(socialGraph, userDetails).lookUpFriends(USER_ID);
+                });
             });
         });
 

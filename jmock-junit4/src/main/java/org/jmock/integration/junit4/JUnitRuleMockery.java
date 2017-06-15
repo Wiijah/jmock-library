@@ -66,7 +66,6 @@ public class JUnitRuleMockery extends JUnit4Mockery implements MethodRule {
                 } finally {
                     doExtraStuff(method);
                 }
-                System.out.println("Before assertIsSatisfied()");
                 assertIsSatisfied();
                 // check performance expectations here
                 assertPerformanceIsSatisfied();

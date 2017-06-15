@@ -24,8 +24,6 @@ public class Sink extends Node {
 
         public boolean invoke() {
             network.registerCompletion(customer);
-            // FIXME Debug message
-            System.out.println("Thread " + customer.threadId() + " is leaving the model");
             return true;
         }
     }
