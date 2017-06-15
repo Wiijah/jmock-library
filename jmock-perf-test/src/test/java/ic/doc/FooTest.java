@@ -22,7 +22,7 @@ public class FooTest {
         final SocialGraph socialGraph = context.mock(SocialGraph.class, new ISNetwork(context.sim(), new Delay(new Exp(2))));
         final UserDetailsService userDetailsService = context.mock(UserDetailsService.class, new ISNetwork(context.sim(), new Delay(new Exp(3))));
 
-        context.runInThreads(10, () -> {
+        context.runConcurrent(10, () -> {
             context.checking(new Expectations() {{
                 oneOf(socialGraph).query(1001L);
                 oneOf(userDetailsService).lookup(with(any(Long.class)));

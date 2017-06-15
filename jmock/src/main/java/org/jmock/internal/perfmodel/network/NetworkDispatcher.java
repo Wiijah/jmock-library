@@ -20,7 +20,7 @@ public class NetworkDispatcher {
     private final AtomicInteger threadsInQuery = new AtomicInteger();
     private final AtomicInteger parentsInQuery = new AtomicInteger();
 
-    private AtomicInteger aliveThreads;
+    private AtomicInteger aliveChildThreads;
     private AtomicInteger aliveParentThreads;
 
     public static final Map<Long, List<Long>> parentThreads = Collections.synchronizedMap(new HashMap<>());
@@ -47,8 +47,8 @@ public class NetworkDispatcher {
         threadSemaphores.get(threadId).release();
     }
 
-    public void setAliveThreads(AtomicInteger threads) {
-        aliveThreads = threads;
+    public void setAliveChildThreads(AtomicInteger threads) {
+        aliveChildThreads = threads;
     }
 
     public void setAliveParentThreads(AtomicInteger threads) {
@@ -83,7 +83,8 @@ public class NetworkDispatcher {
             } else {
                 try {
                     int currentThreadsInQuery = threadsInQuery.incrementAndGet();
-                    if (currentThreadsInQuery == aliveThreads.get()) {
+                    System.out.println("CHILD Thread " + threadId + " currentThreadsInQuery = " + currentThreadsInQuery);
+                    if (currentThreadsInQuery == aliveChildThreads.get()) {
                         // FIXME Debug message
                         System.out.println("CHILD Thread " + threadId + " in query() going to wake main thread");
                         mockerySemaphore.release();

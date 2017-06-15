@@ -35,7 +35,7 @@ public class SerialRequestsExecutorTest {
         // final blah blah = context.mock(DBService.class, Delays.exp(context.sim(), 2);
 
         context.repeat(10, () -> {
-            context.runInThreads(1, () -> {
+            context.runConcurrent(1, () -> {
 
                 context.checking(new Expectations() {{
                     exactly(1).of(socialGraph).query(USER_ID); will(returnValue(FRIEND_IDS));

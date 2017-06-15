@@ -1,18 +1,12 @@
 package ic.doc;
 
-import org.hamcrest.Description;
-import org.hamcrest.Matcher;
-import org.hamcrest.TypeSafeMatcher;
 import org.jmock.Expectations;
 import org.jmock.integration.junit4.PerformanceMockery;
 import org.jmock.internal.perfmodel.network.CPUNetwork;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.util.List;
-
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.Matchers.lessThan;
 import static org.junit.Assert.assertThat;
 
 public class AnotherJUnitTest {
@@ -25,7 +19,7 @@ public class AnotherJUnitTest {
         //final Subscriber subscriber = context.mock(Subscriber.class, new MM1Network());
         final Subscriber subscriber = context.mock(Subscriber.class, new CPUNetwork(context.sim()));
 
-        context.runInThreads(10, () -> {
+        context.runConcurrent(10, () -> {
             Publisher publisher = new Publisher();
             publisher.add(subscriber);
 

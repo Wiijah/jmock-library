@@ -31,7 +31,7 @@ public class ParallelRequestsExecutorTest {
         final UserDetailsService userDetails = context.mock(UserDetailsService.class, new ISNetwork(context.sim(), new Delay(new Exp(3))));
 
         context.repeat(10, () -> {
-            context.runInThreads(1, 2, () -> {
+            context.expectThreads(2, () -> {
 
                 context.checking(new Expectations() {{
                     exactly(1).of(socialGraph).query(userId); will(returnValue(friends));

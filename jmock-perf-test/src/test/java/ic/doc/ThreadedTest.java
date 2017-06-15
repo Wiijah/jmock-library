@@ -33,17 +33,20 @@ public class ThreadedTest {
 
         // outer loop, repeats, sequential
         context.repeat(100, () -> {
-            // inner loop, runInThreads, number of As, threaded
-            context.runInThreads(10, 2, () -> {
-                context.checking(new Expectations() {{
-                    oneOf(socialGraph).query(userId);
-                    oneOf(userDetailsService).lookup(friends.get(0));
-                }});
+            // inner loop, runConcurrent, number of As, threaded
+            context.runConcurrent(10, () -> {
+                context.expectThreads(2, () -> {
+                    context.checking(new Expectations() {{
+                        oneOf(socialGraph).query(userId);
+                        oneOf(userDetailsService).lookup(friends.get(0));
+                    }});
 
-                new Controller(socialGraph, userDetailsService).makeRequest();
+                    new Controller(socialGraph, userDetailsService).makeRequest();
+                });
+
+                // specify some kind of perf expectation here...
             });
 
-            // specify some kind of perf expectation here...
         });
     }
 
