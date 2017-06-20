@@ -66,13 +66,17 @@ public class Sim {
     }
 
     // This is called from the outer parent thread always.
+    // This can also be called from thread 1 "main", if runConcurrent is NOT used
     public double finalThreadResponseTime() {
         long threadId = Thread.currentThread().getId();
         if (perThreadEntryTime.get(threadId) == null) {
-            System.out.println("<!> PARENT THREAD " + threadId + " NULL ENTRY TIME");
-        }
-        if (perThreadExitTime.get(threadId) == null) {
-            System.out.println("<!> PARENT THREAD " + threadId + " NULL EXIT TIME");
+            assert (perThreadEntryTime.size() == 1);
+            for (Map.Entry<Long, Double> e : perThreadEntryTime.entrySet()) {
+                long thread = e.getKey();
+                double entryTime = e.getValue();
+                double exitTime = perThreadExitTime.get(thread);
+                return exitTime - entryTime;
+            }
         }
         return perThreadExitTime.get(threadId) - perThreadEntryTime.get(threadId);
     }
