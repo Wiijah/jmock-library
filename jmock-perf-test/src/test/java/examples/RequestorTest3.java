@@ -21,8 +21,8 @@ public class RequestorTest3 {
 
     @Test
     public void looksUpDetailsForEachFriend() {
-        final SocialGraph socialGraph = context.mock(SocialGraph.class, exponentialDist(5));
-        final UserDetailsService userDetails = context.mock(UserDetailsService.class, exponentialDist(3));
+        final SocialGraph socialGraph = context.mock(SocialGraph.class, exponentialDist(0.005));
+        final UserDetailsService userDetails = context.mock(UserDetailsService.class, exponentialDist(0.003));
 
         context.checking(new Expectations() {{
             exactly(1).of(socialGraph).query(USER_ID); will(returnValue(FRIEND_IDS));

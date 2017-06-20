@@ -30,6 +30,6 @@ public class RequestorTest2 {
         }});
 
         new Requestor(socialGraph, userDetails).lookUpFriends(USER_ID);
-        assertThat(context.runtime(), lessThan(1000.0));
+        assertThat(context.runtime(), lessThan(601.0));
     }
 }
