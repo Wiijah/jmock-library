@@ -41,6 +41,8 @@ public class PerformanceMockery extends JUnitRuleMockery implements MethodRule {
     static final Map<Long, List<Long>> parentThreads = Collections.synchronizedMap(new HashMap<>());
     static final Map<Long, Long> childToParentMap = Collections.synchronizedMap(new HashMap<>());
     private boolean debug = false;
+    private ThreadLocal<AtomicInteger> actualCreatedThreads = ThreadLocal.withInitial(AtomicInteger::new);
+    private ThreadLocal<Integer> totalExpectedThreads = new ThreadLocal<>();
 
     public PerformanceMockery() {
         PerformanceMockery.INSTANCE = this;
@@ -86,7 +88,7 @@ public class PerformanceMockery extends JUnitRuleMockery implements MethodRule {
     public Sim sim() {
         return sim;
     }
-    
+
     public void enableDebug() {
         this.debug = true;
         networkDispatcher.enableDebug();
@@ -163,27 +165,8 @@ public class PerformanceMockery extends JUnitRuleMockery implements MethodRule {
                 PerformanceMockery.parentThreads.put(newlyCreatedThread.getId(), new ArrayList<>());
                 NetworkDispatcher.parentThreads.put(newlyCreatedThread.getId(), new ArrayList<>());
             } else {
-                if (debug) {
-                    System.out.println(
-                            "Inner; parent threadId = " + currentParentThread.getId() + ", name = "
-                                    + currentParentThread.getName() + " --> child threadId = "
-                                    + newlyCreatedThread.getId() + ", name = "
-                                    + newlyCreatedThread.getName());
-                }
-                aliveChildThreads.incrementAndGet();
-                PerformanceMockery.parentThreads.computeIfAbsent(currentParentThread.getId(), k -> new ArrayList<>())
-                        .add(newlyCreatedThread.getId());
-                NetworkDispatcher.parentThreads.computeIfAbsent(currentParentThread.getId(), k -> new ArrayList<>())
-                        .add(newlyCreatedThread.getId());
-                PerformanceMockery.childToParentMap.put(newlyCreatedThread.getId(), currentParentThread.getId());
-                NetworkDispatcher.childToParentMap.put(newlyCreatedThread.getId(), currentParentThread.getId());
-            }
-        });
-
-        PerfMockInstrumenter.setPostCallback((Thread currentThread) -> {
-            // Only for child threads
-            if (!parentThreads.containsKey(currentThread.getId())) {
-                PerformanceMockery.INSTANCE.endInnerThreadCallback();
+                // This should NOT happen
+                throw new RuntimeException("unexpected threads created");
             }
         });
 
@@ -223,6 +206,49 @@ public class PerformanceMockery extends JUnitRuleMockery implements MethodRule {
         if (concurrentTest) {
             synchronized (this) {
                 if (!concurrentExpectThreadsInit) {
+                    PerfMockInstrumenter.setPreCallback((Thread newlyCreatedThread) -> {
+                        Thread currentParentThread = Thread.currentThread();
+                        if (currentParentThread.getName().equals("main")) {
+                            if (debug) {
+                                System.out.println(
+                                        "Outer; parent threadId = " + currentParentThread.getId() + ", name = "
+                                                + currentParentThread.getName() + " --> child threadId = "
+                                                + newlyCreatedThread.getId() + ", name = "
+                                                + newlyCreatedThread.getName());
+                            }
+                            assert (!parentThreads.containsKey(newlyCreatedThread.getId()));
+                            PerformanceMockery.parentThreads.put(newlyCreatedThread.getId(), new ArrayList<>());
+                            NetworkDispatcher.parentThreads.put(newlyCreatedThread.getId(), new ArrayList<>());
+                        } else {
+                            if (debug) {
+                                System.out.println(
+                                        "Inner; parent threadId = " + currentParentThread.getId() + ", name = "
+                                                + currentParentThread.getName() + " --> child threadId = "
+                                                + newlyCreatedThread.getId() + ", name = "
+                                                + newlyCreatedThread.getName());
+                            }
+                            int threads = actualCreatedThreads.get().incrementAndGet();
+                            if (threads > totalExpectedThreads.get()) {
+                                throw new RuntimeException("too many threads created: got " + threads + ", expected " + totalExpectedThreads.get());
+                            }
+                            PerformanceMockery.parentThreads.computeIfAbsent(currentParentThread.getId(), k -> new ArrayList<>())
+                                    .add(newlyCreatedThread.getId());
+                            NetworkDispatcher.parentThreads.computeIfAbsent(currentParentThread.getId(), k -> new ArrayList<>())
+                                    .add(newlyCreatedThread.getId());
+                            PerformanceMockery.childToParentMap.put(newlyCreatedThread.getId(), currentParentThread.getId());
+                            NetworkDispatcher.childToParentMap.put(newlyCreatedThread.getId(), currentParentThread.getId());
+                        }
+                    });
+
+                    PerfMockInstrumenter.setPostCallback((Thread currentThread) -> {
+                        // Only for child threads
+                        if (!parentThreads.containsKey(currentThread.getId())) {
+                            PerformanceMockery.INSTANCE.endInnerThreadCallback();
+                        }
+                    });
+
+                    totalExpectedThreads.set(expectedThreads);
+
                     int numThreads = aliveParentThreads.get();
                     doneSignal = new CountDownLatch(numThreads + (numThreads * expectedThreads));
                     networkDispatcher.setAliveChildThreads(aliveChildThreads);
@@ -252,6 +278,10 @@ public class PerformanceMockery extends JUnitRuleMockery implements MethodRule {
                                         + newlyCreatedThread.getId() + ", name = "
                                         + newlyCreatedThread.getName());
                     }
+                    int threads = actualCreatedThreads.get().incrementAndGet();
+                    if (threads > totalExpectedThreads.get()) {
+                        throw new RuntimeException("too many threads created: got " + threads + ", expected " + totalExpectedThreads.get());
+                    }
                     PerformanceMockery.parentThreads.computeIfAbsent(currentParentThread.getId(), k -> new ArrayList<>())
                             .add(newlyCreatedThread.getId());
                     NetworkDispatcher.parentThreads.computeIfAbsent(currentParentThread.getId(), k -> new ArrayList<>())
@@ -273,6 +303,7 @@ public class PerformanceMockery extends JUnitRuleMockery implements MethodRule {
             Runnable r = () -> {
                 try {
                     startSignal.await();
+                    totalExpectedThreads.set(expectedThreads);
                     testScenario.run();
                     assertIsSatisfied();
                     endOuterThreadCallback();
