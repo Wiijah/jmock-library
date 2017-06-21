@@ -13,6 +13,9 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.hamcrest.Matchers.lessThan;
+import static org.jmock.integration.junit4.PerformanceModels.singleServer;
+import static org.jmock.integration.junit4.QueueingDisciplines.fifo;
+import static org.jmock.integration.junit4.ServiceTimes.exponential;
 import static org.jmock.internal.perfmodel.stats.PerfStatistics.hasMean;
 import static org.junit.Assert.assertThat;
 
@@ -25,8 +28,8 @@ public class RequestorTest {
 
     @Test
     public void looksUpDetailsForEachFriend() {
-        final SocialGraph socialGraph = context.mock(SocialGraph.class, PerformanceModels.singleServer(ServiceTimes.exponential(0.05), QueueingDisciplines.fifo(Integer.MAX_VALUE)));
-        final UserDetailsService userDetails = context.mock(UserDetailsService.class, PerformanceModels.singleServer(ServiceTimes.exponential(0.05), QueueingDisciplines.fifo(Integer.MAX_VALUE)));
+        final SocialGraph socialGraph = context.mock(SocialGraph.class, singleServer(fifo(), ServiceTimes.exponential(0.05)));
+        final UserDetailsService userDetails = context.mock(UserDetailsService.class, singleServer(fifo(), ServiceTimes.exponential(0.05)));
 
         context.expectThreads(1, () -> {
             context.checking(new Expectations() {{

@@ -6,7 +6,7 @@ import org.jmock.internal.perfmodel.network.Network;
 import org.jmock.internal.perfmodel.network.SingleServiceNetwork;
 
 public class PerformanceModels {
-    public static Network singleServer(Distribution serviceTime, CappedQueue queueingDiscipline) {
+    public static Network singleServer(CappedQueue queueingDiscipline, Distribution serviceTime) {
         return new SingleServiceNetwork(PerformanceMockery.INSTANCE.sim(), serviceTime, queueingDiscipline);
     }
 }
