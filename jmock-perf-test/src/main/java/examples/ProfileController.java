@@ -3,8 +3,8 @@ package examples;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Requestor {
-    public Requestor(SocialGraph socialGraph, UserDetailsService userDetailsService) {
+public class ProfileController {
+    public ProfileController(SocialGraph socialGraph, UserDetailsService userDetailsService) {
         this.socialGraph = socialGraph;
         this.userDetailsService = userDetailsService;
     }

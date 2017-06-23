@@ -10,9 +10,10 @@ import java.util.List;
 
 import static org.hamcrest.Matchers.lessThan;
 import static org.jmock.integration.junit4.ResponseTimes.exponentialDist;
+import static org.jmock.internal.perfmodel.stats.PerfStatistics.hasPercentile;
 import static org.junit.Assert.assertThat;
 
-public class RequestorTest3 {
+public class RequestorTest5 {
     static final long USER_ID = 1111L;
     static final List<Long> FRIEND_IDS = Arrays.asList(2222L, 3333L, 4444L, 5555L);
 
@@ -24,12 +25,15 @@ public class RequestorTest3 {
         final SocialGraph socialGraph = context.mock(SocialGraph.class, exponentialDist(0.005));
         final UserDetailsService userDetails = context.mock(UserDetailsService.class, exponentialDist(0.003));
 
-        context.checking(new Expectations() {{
-            exactly(1).of(socialGraph).query(USER_ID); will(returnValue(FRIEND_IDS));
-            exactly(4).of(userDetails).lookup(with(any(Long.class))); will(returnValue(new User()));
-        }});
+        context.expectThreads(2, () -> {
+            context.checking(new Expectations() {{
+                exactly(1).of(socialGraph).query(USER_ID); will(returnValue(FRIEND_IDS));
+                exactly(4).of(userDetails).lookup(with(any(Long.class))); will(returnValue(new User()));
+            }});
 
-        new ProfileController(socialGraph, userDetails).lookUpFriends(USER_ID);
-        assertThat(context.runtime(), lessThan(1000.0));
+            new ParallelProfileController(socialGraph, userDetails).lookUpFriends(USER_ID);
+        });
+
+        assertThat(context.runtimes(), hasPercentile(80, lessThan(800.0)));
     }
 }

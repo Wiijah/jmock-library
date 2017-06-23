@@ -2,10 +2,7 @@ package examples;
 
 import org.jmock.Expectations;
 import org.jmock.integration.junit4.PerformanceMockery;
-import org.jmock.integration.junit4.PerformanceModels;
-import org.jmock.integration.junit4.QueueingDisciplines;
 import org.jmock.integration.junit4.ServiceTimes;
-import org.jmock.internal.perfmodel.network.MM1Network;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -15,7 +12,6 @@ import java.util.List;
 import static org.hamcrest.Matchers.lessThan;
 import static org.jmock.integration.junit4.PerformanceModels.singleServer;
 import static org.jmock.integration.junit4.QueueingDisciplines.fifo;
-import static org.jmock.integration.junit4.ServiceTimes.exponential;
 import static org.jmock.internal.perfmodel.stats.PerfStatistics.hasMean;
 import static org.junit.Assert.assertThat;
 
@@ -39,7 +35,7 @@ public class RequestorTest {
                 will(returnValue(new User()));
             }});
 
-            new ParallelRequestor(socialGraph, userDetails).lookUpFriends(USER_ID);
+            new ParallelProfileController(socialGraph, userDetails).lookUpFriends(USER_ID);
         });
 
         assertThat(context.runtimes(), hasMean(lessThan(600.0)));

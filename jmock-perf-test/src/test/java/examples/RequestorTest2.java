@@ -29,7 +29,7 @@ public class RequestorTest2 {
             exactly(4).of(userDetails).lookup(with(any(Long.class))); will(returnValue(new User()));
         }});
 
-        new Requestor(socialGraph, userDetails).lookUpFriends(USER_ID);
+        new ProfileController(socialGraph, userDetails).lookUpFriends(USER_ID);
         assertThat(context.runtime(), lessThan(601.0));
     }
 }
