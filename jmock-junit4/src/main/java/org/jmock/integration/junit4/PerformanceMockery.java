@@ -8,7 +8,9 @@ import org.jmock.internal.perfmodel.network.NetworkDispatcher;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -20,6 +22,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 public class PerformanceMockery extends JUnitRuleMockery implements MethodRule {
     public static PerformanceMockery INSTANCE;
@@ -204,6 +207,7 @@ public class PerformanceMockery extends JUnitRuleMockery implements MethodRule {
     public void expectThreads(int expectedThreads, final Runnable testScenario) {
         threadedTest = true;
         if (concurrentTest) {
+            totalExpectedThreads.set(expectedThreads);
             synchronized (this) {
                 if (!concurrentExpectThreadsInit) {
                     PerfMockInstrumenter.setPreCallback((Thread newlyCreatedThread) -> {
@@ -227,6 +231,7 @@ public class PerformanceMockery extends JUnitRuleMockery implements MethodRule {
                                                 + newlyCreatedThread.getId() + ", name = "
                                                 + newlyCreatedThread.getName());
                             }
+                            aliveChildThreads.incrementAndGet();
                             int threads = actualCreatedThreads.get().incrementAndGet();
                             if (threads > totalExpectedThreads.get()) {
                                 throw new RuntimeException("too many threads created: got " + threads + ", expected " + totalExpectedThreads.get());
@@ -246,8 +251,6 @@ public class PerformanceMockery extends JUnitRuleMockery implements MethodRule {
                             PerformanceMockery.INSTANCE.endInnerThreadCallback();
                         }
                     });
-
-                    totalExpectedThreads.set(expectedThreads);
 
                     int numThreads = aliveParentThreads.get();
                     doneSignal = new CountDownLatch(numThreads + (numThreads * expectedThreads));
@@ -350,15 +353,15 @@ public class PerformanceMockery extends JUnitRuleMockery implements MethodRule {
         }
         Path filePath = Paths.get(dirPath.toString(),
                 method.getDeclaringClass().getName() + "-" + method.getName() + ".html");
-        ClassLoader loader = getClass().getClassLoader();
         try {
-            List<String> lines = Files.readAllLines(Paths.get(loader.getResource("d3.min.js").getFile()));
-            Files.write(Paths.get(dirPath.toString(), "d3.min.js"), lines);
-            List<String> frontLines = Files.readAllLines(Paths.get(loader.getResource("front.html").getFile()));
+            BufferedReader brJs = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream("/d3.min.js")));
+            Files.write(Paths.get(dirPath.toString(), "d3.min.js"), brJs.lines().collect(Collectors.toList()));
+            BufferedReader brFront = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream("/front.html")));
+            List<String> frontLines = brFront.lines().collect(Collectors.toList());
             frontLines.add("var data = " + threadResponseTimes + ";");
-            List<String> backLines = Files.readAllLines(Paths.get(loader.getResource("back.html").getFile()));
             Files.write(filePath, frontLines);
-            Files.write(filePath, backLines, StandardOpenOption.APPEND, StandardOpenOption.WRITE);
+            BufferedReader brBack = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream("/back.html")));
+            Files.write(filePath, brBack.lines().collect(Collectors.toList()), StandardOpenOption.APPEND, StandardOpenOption.WRITE);
         } catch (IOException e) {
             e.printStackTrace();
         }

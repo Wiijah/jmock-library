@@ -89,7 +89,7 @@ public class NetworkDispatcher {
                 try {
                     int currentThreadsInQuery = threadsInQuery.incrementAndGet();
                     if (debug) {
-                        System.out.println("CHILD Thread " + threadId + " currentThreadsInQuery = " + currentThreadsInQuery);
+                        System.out.println("CHILD Thread " + threadId + " currentThreadsInQuery = " + currentThreadsInQuery + ", aliveChildThreads = " + aliveChildThreads.get());
                     }
                     if (currentThreadsInQuery == aliveChildThreads.get()) {
                         if (debug) {
