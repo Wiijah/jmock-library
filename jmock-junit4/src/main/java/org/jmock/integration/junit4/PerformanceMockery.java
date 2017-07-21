@@ -4,6 +4,11 @@ import ic.doc.agent.PerfMockInstrumenter;
 import org.jmock.internal.InvocationDispatcher;
 import org.jmock.internal.perfmodel.PerformanceModel;
 import org.jmock.internal.perfmodel.Sim;
+import org.jmock.internal.perfmodel.distribution.Distribution;
+import org.jmock.internal.perfmodel.distribution.Exp;
+import org.jmock.internal.perfmodel.network.Delay;
+import org.jmock.internal.perfmodel.network.FixedDelayNetwork;
+import org.jmock.internal.perfmodel.network.ISNetwork;
 import org.jmock.internal.perfmodel.network.NetworkDispatcher;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
@@ -123,6 +128,10 @@ public class PerformanceMockery extends JUnitRuleMockery implements MethodRule {
         aliveParentThreads.decrementAndGet();
         doneSignal.countDown();
         mockerySemaphore.release();
+    }
+
+    public <T> T mock(Class<T> typeToMock, Distribution distribution) {
+        return mock(typeToMock, new ISNetwork(PerformanceMockery.INSTANCE.sim(), new Delay(distribution)));
     }
 
     public <T> T mock(Class<T> typeToMock, PerformanceModel model) {

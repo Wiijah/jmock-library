@@ -9,11 +9,12 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.hamcrest.Matchers.lessThan;
-import static org.jmock.integration.junit4.ResponseTimes.exponentialDist;
+import static org.jmock.integration.junit4.ServiceTimes.exponential;
 import static org.jmock.internal.perfmodel.stats.PerfStatistics.hasPercentile;
 import static org.junit.Assert.assertThat;
 
 public class RequestorTest5 {
+
     static final long USER_ID = 1111L;
     static final List<Long> FRIEND_IDS = Arrays.asList(2222L, 3333L, 4444L, 5555L);
 
@@ -22,8 +23,8 @@ public class RequestorTest5 {
 
     @Test
     public void looksUpDetailsForEachFriend() {
-        final SocialGraph socialGraph = context.mock(SocialGraph.class, exponentialDist(0.005));
-        final UserDetailsService userDetails = context.mock(UserDetailsService.class, exponentialDist(0.003));
+        final SocialGraph socialGraph = context.mock(SocialGraph.class, exponential(0.05));
+        final UserDetailsService userDetails = context.mock(UserDetailsService.class, exponential(0.03));
 
         context.expectThreads(2, () -> {
             context.checking(new Expectations() {{
