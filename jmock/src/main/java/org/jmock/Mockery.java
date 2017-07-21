@@ -215,7 +215,7 @@ public class Mockery implements SelfDescribing {
 	}
 
 	public void assertPerformanceIsSatisfied() {
-        System.out.println("Mockery#assertPerformanceIsSatisfied");
+        //TODO - is this supposed to do something?
     }
 
     public void describeTo(Description description) {
